@@ -2,9 +2,8 @@ const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const User = require("./User");
 
-class Shopper extends Model {}
-
-Shopper.init(
+const Shopper = sequelize.define(
+  "Shopper",
   {
     shopperID: {
       type: DataTypes.INTEGER,
@@ -21,9 +20,8 @@ Shopper.init(
     },
   },
   {
-    sequelize,
-    modelName: "Shopper",
     tableName: "shopper",
+    modelName: "Shopper",
     timestamps: false,
   }
 );

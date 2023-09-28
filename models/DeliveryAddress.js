@@ -1,10 +1,9 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/sequelize');
-const Shopper = require('./Shopper');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/sequelize");
+const Shopper = require("./Shopper");
 
-class DeliveryAddress extends Model {}
-
-DeliveryAddress.init(
+const DeliveryAddress = sequelize.define(
+  "DeliveryAddress",
   {
     deliveryAddressID: {
       type: DataTypes.INTEGER,
@@ -15,41 +14,45 @@ DeliveryAddress.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    city: {
+    municipality: {
       type: DataTypes.STRING(100),
     },
     country: {
       type: DataTypes.STRING(50),
     },
-    district: {
-      type: DataTypes.STRING(50),
-    },
-    iso_country_code: {
-      type: DataTypes.STRING(3),
-    },
     postal_code: {
       type: DataTypes.CHAR(4),
     },
     region: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(100),
     },
-    street: {
-      type: DataTypes.STRING(50),
+    province: {
+      type: DataTypes.STRING(100),
     },
-    street_no: {
-      type: DataTypes.INTEGER,
+    address_line_1: {
+      type: DataTypes.STRING(200),
     },
-
+    address_line_2: {
+      type: DataTypes.STRING(200),
+    },
+    latitude: {
+      type: DataTypes.DECIMAL(10, 6),
+    },
+    longitude: {
+      type: DataTypes.DECIMAL(10, 6),
+    },
   },
   {
-    sequelize,
-    modelName: 'DeliveryAddress',
-    tableName: 'delivery_address',
+    tableName: "delivery_address",
+    modelName: "DeliveryAddress",
     timestamps: true,
   }
 );
 
-DeliveryAddress.belongsTo(Shopper, { foreignKey: 'shopperID', onDelete: 'CASCADE' });
-Shopper.hasMany(DeliveryAddress, { foreignKey: 'shopperID' });
+DeliveryAddress.belongsTo(Shopper, {
+  foreignKey: "shopperID",
+  onDelete: "CASCADE",
+});
+Shopper.hasMany(DeliveryAddress, { foreignKey: "shopperID" });
 
 module.exports = DeliveryAddress;

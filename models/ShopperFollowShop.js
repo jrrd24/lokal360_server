@@ -3,9 +3,8 @@ const sequelize = require("../config/sequelize");
 const Shopper = require("./Shopper");
 const Shop = require("./Shop");
 
-class ShopperFollowShop extends Model {}
-
-ShopperFollowShop.init(
+const ShopperFollowShop = sequelize.define(
+  "ShopperFollowShop",
   {
     shopperFollowShopID: {
       type: DataTypes.INTEGER,
@@ -27,9 +26,8 @@ ShopperFollowShop.init(
     },
   },
   {
-    sequelize,
-    modelName: "ShopperFollowShop",
     tableName: "shopper_follow_shop",
+    modelName: "ShopperFollowProduct",
     timestamps: true,
     createdAt: "followed_at",
     updatedAt: false,

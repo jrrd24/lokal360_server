@@ -1,10 +1,9 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const Product = require("./Product");
 
-class ProductImage extends Model {}
-
-ProductImage.init(
+const ProductImage = sequelize.define(
+  "ProductImage",
   {
     prodImageID: {
       type: DataTypes.INTEGER,
@@ -25,9 +24,8 @@ ProductImage.init(
     },
   },
   {
-    sequelize,
-    modelName: "ProductImage",
     tableName: "product_image",
+    modelName: "ProductImage",
     timestamps: false,
   }
 );

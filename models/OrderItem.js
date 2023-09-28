@@ -1,11 +1,10 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const Order = require("./Order");
 const Product = require("./Product");
 
-class OrderItem extends Model {}
-
-OrderItem.init(
+const OrderItem = sequelize.define(
+  "OrderItem",
   {
     orderItemID: {
       type: DataTypes.INTEGER,
@@ -16,7 +15,7 @@ OrderItem.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    productID: {
+    productVariationID: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
@@ -34,13 +33,13 @@ OrderItem.init(
     },
   },
   {
-    sequelize,
-    modelName: "OrderItem",
     tableName: "order_item",
+    modelName: "OrderItem",
     timestamps: false,
   }
 );
 
 OrderItem.belongsTo(Order, { foreignKey: "orderID", onDelete: "CASCADE" });
-Order.hasMany(OrderItem, { foreignKey: "orderID" });OrderItem.belongsTo(Product, { foreignKey: "productID", onDelete: "CASCADE" });
+Order.hasMany(OrderItem, { foreignKey: "orderID" });
+OrderItem.belongsTo(Product, { foreignKey: "productID", onDelete: "CASCADE" });
 Product.hasMany(OrderItem, { foreignKey: "productID" });

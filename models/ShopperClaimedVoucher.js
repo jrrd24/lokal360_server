@@ -3,9 +3,8 @@ const sequelize = require("../config/sequelize");
 const Shopper = require("./Shopper");
 const Voucher = require("./Voucher");
 
-class ShopperClaimedVoucher extends Model {}
-
-ShopperClaimedVoucher.init(
+const ShopperClaimedVoucher = sequelize.define(
+  "ShopperClaimedVoucher",
   {
     shopperClaimedVoucherID: {
       type: DataTypes.INTEGER,
@@ -35,9 +34,8 @@ ShopperClaimedVoucher.init(
     },
   },
   {
-    sequelize,
-    modelName: "ShopperClaimedVoucher",
     tableName: "shopper_claimed_voucher",
+    modelName: "ShopperClaimedVoucher",
     timestamps: false,
   }
 );

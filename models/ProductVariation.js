@@ -1,11 +1,9 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const Product = require("./Product");
-const VarInventory = require("./VarInventory");
 
-class ProductVariation extends Model {}
-
-ProductVariation.init(
+const ProductVariation = sequelize.define(
+  "ProductVariation",
   {
     prodVariationID: {
       type: DataTypes.INTEGER,
@@ -16,11 +14,7 @@ ProductVariation.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    varInventoryID: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    name: {
+    var_name: {
       type: DataTypes.STRING(50),
       allowNull: false,
     },
@@ -31,12 +25,23 @@ ProductVariation.init(
     var_image: {
       type: DataTypes.STRING(255),
     },
+    amt_sold: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    amt_on_hand: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.STRING(15),
+      allowNull: false,
+    },
   },
   {
-    sequelize,
-    modelName: "ProductVariation",
     tableName: "product_variation",
-    timestamps: false,
+    modelName: "ProductVariation",
+    timestamps: true,
   }
 );
 
@@ -45,11 +50,5 @@ ProductVariation.belongsTo(Product, {
   onDelete: "CASCADE",
 });
 Product.hasMany(ProductVariation, { foreignKey: "productID" });
-
-ProductVariation.belongsTo(VarInventory, {
-  foreignKey: "varInventoryID",
-  onDelete: "CASCADE",
-});
-VarInventory.hasOne(ProductVariation, { foreignKey: "productID" });
 
 module.exports = ProductVariation;

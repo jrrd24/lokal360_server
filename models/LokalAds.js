@@ -1,10 +1,9 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/sequelize');
-const Shop = require('./Shop');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/sequelize");
+const Shop = require("./Shop");
 
-class LokalAds extends Model {}
-
-LokalAds.init(
+const LokalAds = sequelize.define(
+  "LokalAds",
   {
     lokalAdsID: {
       type: DataTypes.INTEGER,
@@ -41,16 +40,19 @@ LokalAds.init(
     ad_image: {
       type: DataTypes.STRING(255),
     },
+    approved_at: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
   },
   {
-    sequelize,
-    modelName: 'LokalAds',
-    tableName: 'lokal_ads',
+    tableName: "lokal_ads",
+    modelName: "LokalAds",
     timestamps: true,
   }
 );
 
-LokalAds.belongsTo(Shop, { foreignKey: 'shopID', onDelete: 'CASCADE' });
-Shop.hasMany(LokalAds, { foreignKey: 'shopID' });
+LokalAds.belongsTo(Shop, { foreignKey: "shopID", onDelete: "CASCADE" });
+Shop.hasMany(LokalAds, { foreignKey: "shopID" });
 
 module.exports = LokalAds;

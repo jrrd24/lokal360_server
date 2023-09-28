@@ -3,9 +3,8 @@ const sequelize = require("../config/sequelize");
 const User = require("./User");
 const Shop = require("./Shop");
 
-class ShopEmployee extends Model {}
-
-ShopEmployee.init(
+const ShopEmployee = sequelize.define(
+  "ShopEmployee",
   {
     shopEmployeeID: {
       type: DataTypes.INTEGER,
@@ -24,12 +23,43 @@ ShopEmployee.init(
       type: DataTypes.STRING(130),
       allowNull: false,
     },
+    access_analytics: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    access_products: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    access_customers: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    access_orders: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    access_shopInformation: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    access_promos: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    access_lokal_ads: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    access_vouchers: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
   },
   {
-    sequelize,
-    modelName: "ShopEmployee",
     tableName: "shop_employee",
-    timestamps: false,
+    modelName: "ShopEmployee",
+    timestamps: true,
   }
 );
 

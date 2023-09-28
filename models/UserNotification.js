@@ -1,11 +1,10 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const User = require("./User");
 const Notification = require("./Notification");
 
-class UserNotification extends Model {}
-
-UserNotification.init(
+const UserNotification = sequelize.define(
+  "UserNotification",
   {
     userNotificationID: {
       type: DataTypes.INTEGER,
@@ -26,9 +25,8 @@ UserNotification.init(
     },
   },
   {
-    sequelize,
-    modelName: "UserNotification",
     tableName: "user_notification",
+    modelName: "UserNotification",
     timestamps: false,
   }
 );

@@ -1,10 +1,9 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const User = require("./User");
 
-class Chat extends Model {}
-
-Chat.init(
+const Chat = sequelize.define(
+  "Chat",
   {
     chatID: {
       type: DataTypes.INTEGER,
@@ -28,8 +27,6 @@ Chat.init(
     },
   },
   {
-    sequelize,
-    modelName: "Chat",
     tableName: "chat",
     timestamps: false,
   }

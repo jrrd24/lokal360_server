@@ -1,11 +1,10 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const ShopOwner = require("./ShopOwner");
 const Category = require("./Category");
 
-class Shop extends Model {}
-
-Shop.init(
+const Shop = sequelize.define(
+  "Shop",
   {
     shopID: {
       type: DataTypes.INTEGER,
@@ -26,7 +25,7 @@ Shop.init(
     },
     description: {
       type: DataTypes.STRING(500),
-      allowNull: false,
+      allowNull: true,
     },
     categoryID: {
       type: DataTypes.INTEGER,
@@ -38,17 +37,8 @@ Shop.init(
     shipping_pickup_enabled: {
       type: DataTypes.BOOLEAN,
     },
-    address_city: {
+    address_municipality: {
       type: DataTypes.STRING(100),
-    },
-    address_country: {
-      type: DataTypes.STRING(50),
-    },
-    address_district: {
-      type: DataTypes.STRING(50),
-    },
-    address_iso_country_code: {
-      type: DataTypes.STRING(3),
     },
     address_postal_code: {
       type: DataTypes.CHAR(4),
@@ -56,65 +46,92 @@ Shop.init(
     address_region: {
       type: DataTypes.STRING(50),
     },
-    address_street: {
-      type: DataTypes.STRING(50),
+    address_line_1: {
+      type: DataTypes.STRING(200),
     },
-    address_street_no: {
-      type: DataTypes.INTEGER,
+    address_line_2: {
+      type: DataTypes.STRING(200),
+    },
+    address_barangay: {
+      type: DataTypes.STRING(100),
+    },
+    address_province: {
+      type: DataTypes.STRING(100),
+    },
+    latitude: {
+      type: DataTypes.DECIMAL(10, 6),
+    },
+    longitude: {
+      type: DataTypes.DECIMAL(10, 6),
     },
     phone_number: {
       type: DataTypes.STRING(20),
     },
     website_link: {
       type: DataTypes.STRING(255),
+      allowNull: true,
     },
     is_open_mon: {
       type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     is_open_tues: {
       type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     is_open_wed: {
       type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     is_open_thurs: {
       type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     is_open_fri: {
       type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     is_open_sat: {
       type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     is_open_sun: {
       type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
     time_open: {
       type: DataTypes.TIME,
+      allowNull: true,
     },
     time_close: {
       type: DataTypes.TIME,
+      allowNull: true,
     },
     logo_img_link: {
       type: DataTypes.STRING(255),
+      allowNull: true,
     },
     header_img_link: {
       type: DataTypes.STRING(255),
+      allowNull: true,
     },
     custom_color_hex: {
       type: DataTypes.STRING(7),
+      allowNull: true,
+      defaultValue: "#6e5fde",
     },
     custom_low_stock_lvl: {
       type: DataTypes.INTEGER,
+      allowNull: true,
     },
     sells_raw_mats: {
       type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
   },
   {
-    sequelize,
-    modelName: "Shop",
     tableName: "shop",
+    modelName: "Shop",
     timestamps: true,
   }
 );

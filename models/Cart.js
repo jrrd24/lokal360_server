@@ -1,10 +1,9 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const Shopper = require("./Shopper");
 
-class Cart extends Model {}
-
-Cart.init(
+const Cart = sequelize.define(
+  "Cart",
   {
     cartID: {
       type: DataTypes.INTEGER,
@@ -17,12 +16,13 @@ Cart.init(
     },
   },
   {
-    sequelize,
-    modelName: "Cart",
     tableName: "cart",
+    modelName: "Cart",
     timestamps: false,
   }
 );
+
+module.exports = Cart;
 
 Cart.belongsTo(Shopper, { foreignKey: "shopperID", onDelete: "CASCADE" });
 Shopper.hasOne(Cart, { foreignKey: "shopperID" });

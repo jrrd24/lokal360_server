@@ -1,9 +1,8 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 
-class Notification extends Model {}
-
-Notification.init(
+const Notification = sequelize.define(
+  "Notification",
   {
     notificationID: {
       type: DataTypes.INTEGER,
@@ -21,12 +20,12 @@ Notification.init(
     },
   },
   {
-    sequelize,
-    modelName: "Notification",
     tableName: "notification",
-    timestamps: true,
-    createdAt: true,
-    updatedAt: false,
+    modelName: "Notification",
+    timestamps: {
+      createdAt: true,
+      updatedAt: false,
+    },
   }
 );
 

@@ -1,10 +1,9 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/sequelize');
-const Shop = require('./Shop');
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/sequelize");
+const Shop = require("./Shop");
 
-class Promo extends Model {}
-
-Promo.init(
+const Promo = sequelize.define(
+  "Promo",
   {
     promoID: {
       type: DataTypes.INTEGER,
@@ -29,14 +28,13 @@ Promo.init(
     },
   },
   {
-    sequelize,
-    modelName: 'Promo',
-    tableName: 'promo',
+    tableName: "promo",
+    modelName: "Promo",
     timestamps: true,
   }
 );
 
-Promo.belongsTo(Shop, { foreignKey: 'shopID', onDelete: 'CASCADE' });
-Shop.hasMany(Promo, { foreignKey: 'shopID' });
+Promo.belongsTo(Shop, { foreignKey: "shopID", onDelete: "CASCADE" });
+Shop.hasMany(Promo, { foreignKey: "shopID" });
 
 module.exports = Promo;

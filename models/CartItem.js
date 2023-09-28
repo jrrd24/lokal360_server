@@ -1,11 +1,10 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const Cart = require("./Cart");
 const Product = require("./Product");
 
-class CartItem extends Model {}
-
-CartItem.init(
+const CartItem = sequelize.define(
+  "CartItem",
   {
     cartItemID: {
       type: DataTypes.INTEGER,
@@ -34,9 +33,8 @@ CartItem.init(
     },
   },
   {
-    sequelize,
-    modelName: "CartItem",
     tableName: "cart_item",
+    modelName: "CartItem",
     timestamps: false,
   }
 );

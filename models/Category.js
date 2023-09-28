@@ -2,9 +2,8 @@ const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const User = require("./User");
 
-class Category extends Model {}
-
-Category.init(
+const Category = sequelize.define(
+  "Category",
   {
     categoryID: {
       type: DataTypes.INTEGER,
@@ -21,9 +20,7 @@ Category.init(
     },
   },
   {
-    sequelize,
-    modelName: 'Category',
-    tableName: 'category',
+    tableName: "category",
     timestamps: false,
   }
 );

@@ -1,10 +1,9 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const User = require("./User");
 
-class Admin extends Model {}
-
-Admin.init(
+const Admin = sequelize.define(
+  "Admin",
   {
     adminID: {
       type: DataTypes.INTEGER,
@@ -21,10 +20,9 @@ Admin.init(
     },
   },
   {
-    sequelize,
-    modelName: "Admin",
     tableName: "admin",
     timestamps: false,
+    modelName: "Admin",
   }
 );
 

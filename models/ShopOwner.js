@@ -1,11 +1,10 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/sequelize');
-const User = require('./User');
-const Shop = require('./Shop')
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/sequelize");
+const User = require("./User");
+const Shop = require("./Shop");
 
-class ShopOwner extends Model {}
-
-ShopOwner.init(
+const ShopOwner = sequelize.define(
+  "ShopOwner",
   {
     shopOwnerID: {
       type: DataTypes.INTEGER,
@@ -34,15 +33,13 @@ ShopOwner.init(
     },
   },
   {
-    sequelize,
-    modelName: 'ShopOwner',
-    tableName: 'shop_owner',
+    tableName: "shop_owner",
+    modelName: "ShopOwner",
     timestamps: false,
   }
 );
 
-ShopOwner.belongsTo(User, { foreignKey: 'userID', onDelete: 'CASCADE' });
-User.hasOne(ShopOwner, {foreignKey:'userID'})
-
+ShopOwner.belongsTo(User, { foreignKey: "userID", onDelete: "CASCADE" });
+User.hasOne(ShopOwner, { foreignKey: "userID" });
 
 module.exports = ShopOwner;

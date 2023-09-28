@@ -1,9 +1,8 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 
-class User extends Model {}
-
-User.init(
+const User = sequelize.define(
+  "User",
   {
     userID: {
       type: DataTypes.INTEGER,
@@ -43,20 +42,32 @@ User.init(
       allowNull: false,
       defaultValue: "Regular",
     },
-    user_role: {
-      type: DataTypes.STRING(20),
-      allowNull: false,
-      defaultValue: "Shopper",
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
-  
+    is_shopper: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    is_shop_owner: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    is_shop_employee: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    is_admin: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
-    sequelize,
-    modelName: "User",
     tableName: "user",
+    modelName: "User",
     timestamps: true,
   }
-
 );
 
 module.exports = User;

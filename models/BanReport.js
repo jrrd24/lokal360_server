@@ -1,12 +1,11 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const User = require("./User");
 const Shop = require("./Shop");
 const Shopper = require("./Shopper");
 
-class BanReport extends Model {}
-
-BanReport.init(
+const BanReport = sequelize.define(
+  "BanReport",
   {
     banReportID: {
       type: DataTypes.INTEGER,
@@ -55,9 +54,8 @@ BanReport.init(
     },
   },
   {
-    sequelize,
-    modelName: "BanReport",
     tableName: "ban_report",
+    modelName: "BanReport",
     timestamps: true,
     createdAt: "createdAt",
     updatedAt: "resolved_at",

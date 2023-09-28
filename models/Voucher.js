@@ -1,11 +1,10 @@
-const { DataTypes, Model } = require('sequelize');
-const sequelize = require('../config/sequelize');
-const Shop = require('./Shop');
-const Promo = require('./Promo');
+const { DataTypes, Model } = require("sequelize");
+const sequelize = require("../config/sequelize");
+const Shop = require("./Shop");
+const Promo = require("./Promo");
 
-class Voucher extends Model {}
-
-Voucher.init(
+const Voucher = sequelize.define(
+  "Voucher",
   {
     voucherID: {
       type: DataTypes.INTEGER,
@@ -34,17 +33,16 @@ Voucher.init(
     },
   },
   {
-    sequelize,
-    modelName: 'Voucher',
-    tableName: 'voucher',
+    tableName: "voucher",
+    modelName: "Voucher",
     timestamps: true,
   }
 );
 
-Voucher.belongsTo(Shop, { foreignKey: 'shopID', onDelete: 'CASCADE' });
-Shop.hasMany(Voucher, { foreignKey: 'shopID' });
+Voucher.belongsTo(Shop, { foreignKey: "shopID", onDelete: "CASCADE" });
+Shop.hasMany(Voucher, { foreignKey: "shopID" });
 
-Voucher.belongsTo(Promo, { foreignKey: 'promoID', onDelete: 'CASCADE' });
-Promo.hasMany(Voucher, { foreignKey: 'promoID' });
+Voucher.belongsTo(Promo, { foreignKey: "promoID", onDelete: "CASCADE" });
+Promo.hasMany(Voucher, { foreignKey: "promoID" });
 
 module.exports = Voucher;

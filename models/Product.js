@@ -1,13 +1,12 @@
-const { DataTypes, Model } = require("sequelize");
+const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const Category = require("./Category");
 const ShopCategory = require("./ShopCategory");
 const Shop = require("./Shop");
 const Promo = require("./Promo");
 
-class Product extends Model {}
-
-Product.init(
+const Product = sequelize.define(
+  "Product",
   {
     productID: {
       type: DataTypes.INTEGER,
@@ -30,7 +29,7 @@ Product.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    name: {
+    product_name: {
       type: DataTypes.STRING(160),
       allowNull: false,
     },
@@ -40,15 +39,17 @@ Product.init(
     archived_at: {
       type: DataTypes.DATE,
     },
+    is_featured: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
-    sequelize,
-    modelName: "Product",
     tableName: "product",
+    modelName: "Product",
     timestamps: true,
   }
 );
-
 Product.belongsTo(Category, { foreignKey: "categoryID", onDelete: "CASCADE" });
 Category.hasMany(Product, { foreignKey: "categoryID" });
 
