@@ -18,6 +18,9 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    token: {
+      type: DataTypes.STRING(512),
+    },
     first_name: {
       type: DataTypes.STRING(100),
     },

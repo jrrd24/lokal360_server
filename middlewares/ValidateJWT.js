@@ -1,26 +1,23 @@
 const { verify } = require("jsonwebtoken");
+require(`dotenv`).config();
 
 const validateToken = (req, res, next) => {
-  const accessToken = req.cookies["access-token"];
-  // Log the token value
-  console.log("Access Token:", accessToken);
-
-  if (!accessToken)
-    return res.status(400).json({ error: "User not Authenticated" });
-
-  try {
-    const validToken = verify(accessToken, "lokal360JJADS");
-    // Log the decoded token object
-    console.log("Valid Token:", validToken);
-    if (validToken) {
-      req.authenticated = true;
-      req.validToken = validToken;
-      console.log(req.authenticated);
-      return next();
-    }
-  } catch (err) {
-    return res.status(400).json({ error: err });
+  const authHeader = req.headers[`authorization`];
+  if (!authHeader) {
+    return res.status(401).json({ error: "Authorization header missing" });
   }
+
+  //bearer token
+  console.log(authHeader);
+  const token = authHeader.split(` `)[1];
+  verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      console.error("JWT Verification Error:", err);
+      return res.status(403).json({ error: "Invalid token" });
+    }
+    req.user = decoded.userID;
+    next();
+  });
 };
 
 module.exports = { validateToken };
