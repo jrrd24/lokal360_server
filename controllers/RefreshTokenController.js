@@ -7,10 +7,10 @@ module.exports = {
   handleRefreshToken: async (req, res) => {
     const cookies = req.cookies;
 
-    if (!cookies?.["refresh-token"]) {
+    if (!cookies?.["jwt"]) {
       return res.sendStatus(401);
     }
-    const refreshToken = cookies["refresh-token"];
+    const refreshToken = cookies["jwt"];
 
     //find user
     const foundUser = await User.findOne({ where: { token: refreshToken } });

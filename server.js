@@ -4,15 +4,24 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const sequelize = require("./config/sequelize");
 const verifyJWT = require("./middlewares/ValidateJWT");
+
+const https = require("https");
+const fs = require("fs");
 // initialize routes
 const userRoute = require("./routes/User");
 const homeRoute = require("./routes/Home");
 const authRoute = require("./routes/Auth");
 const refreshRoute = require("./routes/Refresh");
 const logoutRoute = require("./routes/Logout");
+
 //initalize functions
 const app = express();
 const port = 8800;
+
+const credentials = {
+  key: fs.readFileSync("localhost-key.pem"),
+  cert: fs.readFileSync("localhost.pem"),
+};
 
 //Sync Database with models
 const db = require(`./models`);
@@ -25,15 +34,6 @@ sequelize
     console.error("Error syncing database:", error);
   });
 
-//check if server is running on port
-app.listen(port, () => {
-  console.log("Server is running on port " + port);
-});
-
-// Parse JSON request bodies
-app.use(express.json());
-// for Cookies
-app.use(cookieParser());
 // enable CORS
 app.use(
   cors({
@@ -41,6 +41,23 @@ app.use(
     credentials: true,
   })
 );
+// Parse JSON request bodies
+app.use(express.json());
+// for Cookies
+app.use(cookieParser());
+
+// //check if server is running on port
+// app.listen(port, () => {
+//   console.log("Server is running on port " + port);
+// });
+
+// Create HTTPS server
+const httpsServer = https.createServer(credentials, app);
+
+// Start server
+httpsServer.listen(port, () => {
+  console.log(`Server is running on https://localhost:${port}/`);
+});
 
 //routes
 app.use("/api/user", userRoute);

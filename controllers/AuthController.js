@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Shopper = require("../models/Shopper");
 const bcrypt = require("bcrypt");
+const fs = require('fs');
 const { createTokens } = require("../helpers/JWT");
 
 module.exports = {
@@ -54,13 +55,29 @@ module.exports = {
     //find if email (user) exists
     try {
       const user = await User.findOne({ where: { email: email } });
-      if (!user) return res.status(401).json({ error: "User Doesn't Exist" });
+      //handle if there is no user
+      if (!user) return res.sendStatus(404);
+
       // check password
       const dbPassword = user.password;
       const match = await bcrypt.compare(password, dbPassword);
       if (!match) {
-        res.status(400).json({ error: "Wrong Username or Password" });
+        return res.sendStatus(401);
       } else {
+        //set roles
+        const roles = [];
+        if (user.is_shopper) {
+          roles.push("shopper");
+        }
+        if (user.is_shop_owner) {
+          roles.push("shop owner");
+        }
+        if (user.is_shop_employee) {
+          roles.push("shop employee");
+        }
+        if (user.is_admin) {
+          roles.push("admin");
+        }
         //Create Token
         const tokens = createTokens(user);
 
@@ -82,16 +99,17 @@ module.exports = {
 
         //Set token as cookie
         //Token will expire after 30 days (2592000000 ms)
-        res.cookie("refresh-token", refreshToken, {
+        res.cookie("jwt", refreshToken, {
           httpOnly: true,
+          secure: true,
+          sameSite: "None",
           maxAge: 30 * 24 * 60 * 60 * 1000,
         }); // Add: secure:true in prod (only works for https)
 
-        res.status(200).json({ message: "Logged In", accessToken });
+        res.status(200).json({ accessToken, roles });
       }
     } catch (err) {
       res.status(400).json({ error: err });
     }
   },
-
 };
