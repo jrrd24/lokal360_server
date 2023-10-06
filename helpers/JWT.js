@@ -25,7 +25,7 @@ const createTokens = (user) => {
   );
 
   const refreshToken = sign(
-    { userID: user.userID },
+    { userID: user.userID, roles: roles },
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: `30d` }
   );

@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const { createTokens } = require("../helpers/JWT");
 const { verify } = require("jsonwebtoken");
+const { access } = require("fs");
 
 module.exports = {
   // login user
@@ -22,8 +23,9 @@ module.exports = {
         return res.sendStatus(403);
       }
       const tokens = createTokens(foundUser);
+      const roles = decoded.roles;
       const accessToken = tokens.accessToken;
-      res.json({ accessToken });
+      res.json({ accessToken, roles });
     });
   },
 };

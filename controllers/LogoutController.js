@@ -5,15 +5,14 @@ const { verify } = require("jsonwebtoken");
 module.exports = {
   // logout user
   logout: async (req, res) => {
-    // TODO: DELETE ACCESS-TOKEN IN FRONT END
     console.log("Cookies:", req.cookies);
     console.log("Authorization Header:", req.headers["authorization"]);
 
     const cookies = req.cookies;
-    if (!cookies?.["refresh-token"]) {
+    if (!cookies?.["jwt"]) {
       return res.sendStatus(204);
     }
-    const refreshToken = cookies["refresh-token"];
+    const refreshToken = cookies["jwt"];
 
     // check ref token in db
     const foundUser = await User.findOne({ where: { token: refreshToken } });
@@ -28,8 +27,10 @@ module.exports = {
     // delete token from db
     await User.update({ token: "" }, { where: { userID: foundUser.userID } });
     //clear cookie
-    res.clearCookie("refresh-token", {
+    res.clearCookie("jwt", {
       httpOnly: true,
+      secure: true,
+      sameSite: "None",
       maxAge: 30 * 24 * 60 * 60 * 1000,
     });
     return res.sendStatus(204);
