@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const Shopper = require("../models/Shopper");
 const bcrypt = require("bcrypt");
-const fs = require('fs');
+const fs = require("fs");
 const { createTokens } = require("../helpers/JWT");
 
 module.exports = {
@@ -78,6 +78,7 @@ module.exports = {
         if (user.is_admin) {
           roles.push("admin");
         }
+        const userID = user.userID;
         //Create Token
         const tokens = createTokens(user);
 
@@ -106,7 +107,7 @@ module.exports = {
           maxAge: 30 * 24 * 60 * 60 * 1000,
         }); // Add: secure:true in prod (only works for https)
 
-        res.status(200).json({ accessToken, roles });
+        res.status(200).json({ accessToken, roles, userID });
       }
     } catch (err) {
       res.status(400).json({ error: err });

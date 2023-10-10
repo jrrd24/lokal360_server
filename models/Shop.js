@@ -100,11 +100,11 @@ const Shop = sequelize.define(
       defaultValue: true,
     },
     time_open: {
-      type: DataTypes.TIME,
+      type: DataTypes.DATE,
       allowNull: true,
     },
     time_close: {
-      type: DataTypes.TIME,
+      type: DataTypes.DATE,
       allowNull: true,
     },
     logo_img_link: {

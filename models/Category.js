@@ -16,7 +16,6 @@ const Category = sequelize.define(
     },
     icon_file_path: {
       type: DataTypes.STRING(255),
-      allowNull: false,
     },
   },
   {

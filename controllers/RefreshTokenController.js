@@ -25,7 +25,8 @@ module.exports = {
       const tokens = createTokens(foundUser);
       const roles = decoded.roles;
       const accessToken = tokens.accessToken;
-      res.json({ accessToken, roles });
+      const userID = foundUser.userID;
+      res.json({ accessToken, roles, userID });
     });
   },
 };
