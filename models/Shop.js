@@ -15,7 +15,7 @@ const Shop = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    name: {
+    shop_name: {
       type: DataTypes.STRING(50),
       allowNull: false,
     },
@@ -128,6 +128,10 @@ const Shop = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    is_360_partner: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
     tableName: "shop",
@@ -143,6 +147,6 @@ Shop.belongsTo(ShopOwner, {
 ShopOwner.hasOne(Shop, { foreignKey: "shopOwnerID" });
 
 Shop.belongsTo(Category, { foreignKey: "categoryID", onDelete: "CASCADE" });
-Category.hasMany(Shop, { foreignKey: "category" });
+Category.hasMany(Shop, { foreignKey: "categoryID" });
 
 module.exports = Shop;

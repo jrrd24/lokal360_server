@@ -1,4 +1,7 @@
 const User = require("../models/User");
+const Shop = require("../models/Shop");
+const ShopOwner = require("../models/ShopOwner");
+const ShopEmployee = require("../models/ShopEmployee");
 const { createTokens } = require("../helpers/JWT");
 const { verify } = require("jsonwebtoken");
 const { access } = require("fs");
@@ -18,15 +21,68 @@ module.exports = {
     if (!foundUser) return res.status(403); //Forbidden
 
     //evaluate jwt
-    verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
-      if (err || !decoded || foundUser.userID !== decoded.userID) {
-        return res.sendStatus(403);
+    verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+      async (err, decoded) => {
+        if (err || !decoded || foundUser.userID !== decoded.userID) {
+          return res.sendStatus(403);
+        }
+
+        const tokens = createTokens(foundUser);
+        const roles = decoded.roles;
+        const accessToken = tokens.accessToken;
+        const userID = foundUser.userID;
+
+        // get shop ID (for shop owners and shop employees)
+        // will be null if user is not owner or employee
+        let userShopID = null;
+        let shopID = null;
+        try {
+          userShopID = await Shop.findAll({
+            attributes: ["shopID"],
+            include: [
+              {
+                model: ShopOwner,
+                where: { userID: userID },
+                include: [
+                  {
+                    model: User,
+                    required: true,
+                    where: {
+                      userID: userID,
+                    },
+                    attributes: [],
+                  },
+                ],
+                attributes: [],
+              },
+            ],
+          });
+        } catch (error) {
+          console.error("Fetch Shop ID error", error);
+          res.status(500).json(error);
+        }
+        if (userShopID && userShopID.length > 0) {
+          shopID = userShopID[0].shopID;
+        }
+
+        let userShopEmployeeID = null;
+        console.log("USER ID", userID);
+        try {
+          userShopEmployeeID = await ShopEmployee.findOne({
+            where: { userID: userID },
+          });
+        } catch (error) {
+          console.error("Fetch Shop ID error", error);
+          res.status(500).json({ error: "Internal Server Error" });
+        }
+        if (userShopEmployeeID) {
+          shopID = userShopEmployeeID.shopID;
+        }
+
+        res.json({ accessToken, roles, userID, shopID });
       }
-      const tokens = createTokens(foundUser);
-      const roles = decoded.roles;
-      const accessToken = tokens.accessToken;
-      const userID = foundUser.userID;
-      res.json({ accessToken, roles, userID });
-    });
+    );
   },
 };

@@ -2,37 +2,23 @@ const User = require("../models/User");
 const ShopOwner = require("../models/ShopOwner");
 const ShopEmployee = require("../models/ShopEmployee");
 const Shop = require("../models/Shop");
+const Category = require("../models/Category");
+const sequelize = require("../config/sequelize");
 
 module.exports = {
   //get shop info
   getShopInfo: async (req, res) => {
-    const { userID } = req.query;
+    const { shopID } = req.query;
     try {
-      const result = await Shop.findAll({
+      const result = await Shop.findOne({
+        where: { shopID: shopID },
         include: [
           {
-            model: ShopOwner,
-            include: [
-              {
-                model: User,
-                required: true,
-                where: {
-                  userID: userID,
-                },
-              },
-            ],
-          },
-          {
-            model: ShopEmployee,
-            include: [
-              {
-                model: User,
-                required: true,
-                where: {
-                  userID: userID,
-                },
-              },
-            ],
+            model: Category,
+            attributes: ["category_name"],
+            where: {
+              categoryID: sequelize.col("Shop.categoryID"),
+            },
           },
         ],
       });

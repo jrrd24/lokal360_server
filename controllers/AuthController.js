@@ -1,5 +1,8 @@
 const User = require("../models/User");
+const Shop = require("../models/Shop");
 const Shopper = require("../models/Shopper");
+const ShopOwner = require("../models/ShopOwner");
+const ShopEmployee = require("../models/ShopEmployee");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
 const { createTokens } = require("../helpers/JWT");
@@ -82,6 +85,44 @@ module.exports = {
         //Create Token
         const tokens = createTokens(user);
 
+        // get shop ID (for shop owners and shop employees)
+        // will be null if user is not owner or employee
+        let userShopID = null;
+        let shopID = null;
+        try {
+          userShopID = await Shop.findAll({
+            attributes: ["shopID"],
+            include: [
+              {
+                model: ShopOwner,
+                where: { userID: userID },
+                attributes: [],
+              },
+            ],
+          });
+        } catch (error) {
+          console.error("Fetch Shop ID error", error);
+          res.status(500).json({ error: "Internal Server Error" });
+        }
+        if (userShopID && userShopID.length > 0) {
+          shopID = userShopID[0].shopID;
+        }
+
+        let userShopEmployeeID = null;
+        console.log("USER ID", userID);
+        try {
+          userShopEmployeeID = await ShopEmployee.findOne({
+            where: { userID: userID },
+          });
+        } catch (error) {
+          console.error("Fetch Shop ID error", error);
+          res.status(500).json({ error: "Internal Server Error" });
+        }
+        if (userShopEmployeeID) {
+          shopID = userShopEmployeeID.shopID;
+        }
+        console.log("USEID", userShopEmployeeID);
+
         // Extract the tokens from the returned object
         const accessToken = tokens.accessToken;
         const refreshToken = tokens.refreshToken;
@@ -107,7 +148,7 @@ module.exports = {
           maxAge: 30 * 24 * 60 * 60 * 1000,
         }); // Add: secure:true in prod (only works for https)
 
-        res.status(200).json({ accessToken, roles, userID });
+        res.status(200).json({ accessToken, roles, userID, shopID });
       }
     } catch (err) {
       res.status(400).json({ error: err });

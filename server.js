@@ -15,6 +15,7 @@ const refreshRoute = require("./routes/Refresh");
 const logoutRoute = require("./routes/Logout");
 const profileRoute = require("./routes/Profile");
 const shopInfoRoute = require("./routes/ShopInfo");
+const categoryRoute = require("./routes/Category");
 
 //initalize functions
 const app = express();
@@ -70,3 +71,4 @@ app.use(verifyJWT.validateToken);
 app.use("/api/home", homeRoute);
 app.use("/api/profile", profileRoute);
 app.use("/api/shopInfo", shopInfoRoute);
+app.use("/api/category", categoryRoute);
