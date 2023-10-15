@@ -1,2 +1,9 @@
 node_modules
 .env
+
+uploads/shop/logoAndHeader/*
+!uploads/shop/logoAndHeader/.gitignore
+uploads/shop/product/*
+!uploads/shop/product/.gitignore
+uploads/shop/variation/*
+!uploads/shop/variation/.gitignore
