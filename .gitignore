@@ -1,5 +1,9 @@
 node_modules
 .env
+localhost-key.pem
+localhost.pem
+rootCA-key.pem
+rootCA.pem
 
 uploads/shop/logoAndHeader/*
 !uploads/shop/logoAndHeader/.gitignore

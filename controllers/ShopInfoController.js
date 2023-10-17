@@ -3,6 +3,7 @@ const Category = require("../models/Category");
 const sequelize = require("../config/sequelize");
 const path = require("path");
 const destinationFolder = "uploads/shop/logoAndHeader";
+const destinationFolderDB = "shop/logoAndHeader";
 const configureMulter = require("../helpers/MulterConfig");
 const upload = configureMulter(destinationFolder);
 
@@ -47,13 +48,14 @@ module.exports = {
           return res.status(500).json({ error: "File upload error" });
         }
 
+        console.log(req.body);
         const {
           addressBarangay,
           addressLine1,
           addressLine2,
           addressMunicipality,
           addressPostalCode,
-          addressProvice,
+          addressProvince,
           addressRegion,
           latitude,
           longitude,
@@ -85,11 +87,7 @@ module.exports = {
         if (req.files.shopHeader) {
           const shopHeaderFile = req.files.shopHeader[0];
           const shopHeaderFilename = `${timestamp}_${shopHeaderFile.originalname}`;
-          shopHeaderPath = path.join(
-            "/",
-            destinationFolder,
-            shopHeaderFilename
-          );
+          shopHeaderPath = path.join(destinationFolderDB, shopHeaderFilename);
 
           console.log("HEADER FILE", shopHeaderFile);
           console.log("HEADER FILE NAME", shopHeaderFilename);
@@ -98,7 +96,7 @@ module.exports = {
         if (req.files.shopLogo) {
           const shopLogoFile = req.files.shopLogo[0];
           const shopLogoFilename = `${timestamp}_${shopLogoFile.originalname}`;
-          shopLogoPath = path.join("/", destinationFolder, shopLogoFilename);
+          shopLogoPath = path.join(destinationFolderDB, shopLogoFilename);
           console.log("SHOP LOGO FILE", shopLogoFile);
           console.log("SHOP LOGO FILE NAME", shopLogoFilename);
         }
@@ -117,8 +115,8 @@ module.exports = {
               address_region: addressRegion,
               address_line_1: addressLine1,
               address_line_2: addressLine2,
-              addrees_barangay: addressBarangay,
-              address_province: addressProvice,
+              address_barangay: addressBarangay,
+              address_province: addressProvince,
               latitude: latitude,
               longitude: longitude,
               phone_number: phoneNumber,

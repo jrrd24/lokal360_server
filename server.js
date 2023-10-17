@@ -48,6 +48,7 @@ app.use(
 app.use(express.json());
 // for Cookies
 app.use(cookieParser());
+app.use(express.static(`uploads`));
 
 // //check if server is running on port
 // app.listen(port, () => {
