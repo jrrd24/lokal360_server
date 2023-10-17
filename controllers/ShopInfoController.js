@@ -6,6 +6,7 @@ const destinationFolder = "uploads/shop/logoAndHeader";
 const destinationFolderDB = "shop/logoAndHeader";
 const configureMulter = require("../helpers/MulterConfig");
 const upload = configureMulter(destinationFolder);
+const fs = require("fs");
 
 module.exports = {
   //get shop info
@@ -33,8 +34,26 @@ module.exports = {
   },
 
   //update shop info
-  updateShopInfo: function (req, res) {
+  updateShopInfo: async function (req, res) {
     const { shopID } = req.query;
+
+    // get existing file path if current shop exists
+    let currentShop = null;
+    try {
+      currentShop = await Shop.findOne({
+        where: { shopID: shopID },
+        attributes: ["logo_img_link", "header_img_link"],
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Unable to Find Shop" });
+    }
+    const existingLogoPath = `uploads/${currentShop?.logo_img_link}`;
+    const existingHeaderPath = `uploads/${currentShop?.header_img_link}`;
+
+    console.log("ELP", existingLogoPath);
+    console.log("EHP", existingHeaderPath);
+
     const timestamp = Date.now();
     const upload = configureMulter(destinationFolder, timestamp);
 
@@ -85,20 +104,39 @@ module.exports = {
         let shopHeaderPath = null;
 
         if (req.files.shopHeader) {
+          // delete existing image from storage
+          if (existingHeaderPath) {
+            try {
+              fs.unlinkSync(existingHeaderPath);
+            } catch (err) {
+              console.error("Error deleting existing header image:", err);
+              res
+                .status(500)
+                .json({ error: "Error Deleting Previous Header Image" });
+            }
+          }
+
           const shopHeaderFile = req.files.shopHeader[0];
           const shopHeaderFilename = `${timestamp}_${shopHeaderFile.originalname}`;
           shopHeaderPath = path.join(destinationFolderDB, shopHeaderFilename);
-
-          console.log("HEADER FILE", shopHeaderFile);
-          console.log("HEADER FILE NAME", shopHeaderFilename);
         }
 
-        if (req.files.shopLogo) {
+        if (req.files.shopLogo) { 
+          // delete existing image from storage
+          if (existingLogoPath) {
+            try {
+              fs.unlinkSync(existingLogoPath);
+            } catch (err) {
+              console.error("Error deleting existing header image:", err);
+              res
+                .status(500)
+                .json({ error: "Error Deleting Previous Header Image" });
+            }
+          }
+
           const shopLogoFile = req.files.shopLogo[0];
           const shopLogoFilename = `${timestamp}_${shopLogoFile.originalname}`;
           shopLogoPath = path.join(destinationFolderDB, shopLogoFilename);
-          console.log("SHOP LOGO FILE", shopLogoFile);
-          console.log("SHOP LOGO FILE NAME", shopLogoFilename);
         }
 
         try {
