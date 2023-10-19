@@ -47,7 +47,7 @@ module.exports = {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Email Already Exists" });
+      res.status(403).json({ error: "Email Already Exists" });
     }
   },
 

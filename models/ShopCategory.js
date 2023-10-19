@@ -14,7 +14,7 @@ const ShopCategory = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    name: {
+    shop_category_name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
