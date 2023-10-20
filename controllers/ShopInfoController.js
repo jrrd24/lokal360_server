@@ -26,7 +26,7 @@ module.exports = {
         ],
       });
 
-      res.json(result); //Return Result
+      res.json(result);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal server error" });
@@ -34,7 +34,7 @@ module.exports = {
   },
 
   //update shop info
-  updateShopInfo: async function (req, res) {
+  updateShopInfo: async (req, res) => {
     const { shopID } = req.query;
 
     // get existing file path if current shop exists
@@ -51,9 +51,6 @@ module.exports = {
     const existingLogoPath = `uploads/${currentShop?.logo_img_link}`;
     const existingHeaderPath = `uploads/${currentShop?.header_img_link}`;
 
-    console.log("ELP", existingLogoPath);
-    console.log("EHP", existingHeaderPath);
-
     const timestamp = Date.now();
     const upload = configureMulter(destinationFolder, timestamp);
 
@@ -62,7 +59,6 @@ module.exports = {
       res,
       async function (err) {
         if (err) {
-          // Handle multer error, if any
           console.error(err);
           return res.status(500).json({ error: "File upload error" });
         }
@@ -121,7 +117,7 @@ module.exports = {
           shopHeaderPath = path.join(destinationFolderDB, shopHeaderFilename);
         }
 
-        if (req.files.shopLogo) { 
+        if (req.files.shopLogo) {
           // delete existing image from storage
           if (existingLogoPath) {
             try {

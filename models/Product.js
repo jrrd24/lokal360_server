@@ -19,7 +19,6 @@ const Product = sequelize.define(
     },
     shopCategoryID: {
       type: DataTypes.INTEGER,
-      allowNull: false,
     },
     shopID: {
       type: DataTypes.INTEGER,
@@ -27,7 +26,8 @@ const Product = sequelize.define(
     },
     promoID: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: null,
     },
     product_name: {
       type: DataTypes.STRING(160),
@@ -38,6 +38,10 @@ const Product = sequelize.define(
     },
     archived_at: {
       type: DataTypes.DATE,
+    },
+    total_sold: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
     },
     is_featured: {
       type: DataTypes.BOOLEAN,
