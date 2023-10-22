@@ -104,11 +104,9 @@ module.exports = {
           if (existingHeaderPath) {
             try {
               fs.unlinkSync(existingHeaderPath);
-            } catch (err) {
-              console.error("Error deleting existing header image:", err);
-              res
-                .status(500)
-                .json({ error: "Error Deleting Previous Header Image" });
+            } catch (error) {
+              console.error("Error updating header image", error);
+              return res.status(500).json({ error: "Error Updating Header" });
             }
           }
 

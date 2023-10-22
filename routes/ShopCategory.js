@@ -10,5 +10,10 @@ router.delete(
   verifyJWT.validateToken,
   controller.deleteShopCategory
 );
+router.patch(
+  "/restore",
+  verifyJWT.validateToken,
+  controller.restoreShopCategory
+);
 router.patch("/update", verifyJWT.validateToken, controller.updateShopCategory);
 module.exports = router;

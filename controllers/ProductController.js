@@ -1,5 +1,7 @@
 const Product = require("../models/Product");
 const ProductImage = require("../models/ProductImage");
+const ProductVariation = require("../models/ProductVariation");
+const VoucherAppliedProduct = require("../models/VoucherAppliedProduct");
 const path = require("path");
 const destinationFolder = "uploads/shop/product";
 const destinationFolderDB = "shop/product";
@@ -7,9 +9,12 @@ const configureMulter = require("../helpers/MulterConfig");
 const upload = configureMulter(destinationFolder);
 const fs = require("fs");
 const sequelize = require("../config/sequelize");
+const ShopCategory = require("../models/ShopCategory");
+const Category = require("../models/Category");
 
 module.exports = {
-  getAllProduct: async (req, res) => {
+  // get data of all products of shop
+  getAllShopProduct: async (req, res) => {
     const { shopID } = req.query;
     try {
       const allProducts = await Product.findAll({
@@ -23,6 +28,35 @@ module.exports = {
       });
 
       res.json(allProducts);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+
+  // get data of one product
+  getProduct: async (req, res) => {
+    const { productID } = req.query;
+    try {
+      const product = await Product.findOne({
+        where: { productID: productID },
+        include: [
+          {
+            model: ProductImage,
+            attributes: ["prod_image"],
+          },
+          { model: ShopCategory, attributes: ["shop_category_name"] },
+          { model: Category, attributes: ["category_name"] },
+          { model: ProductVariation },
+          { model: VoucherAppliedProduct },
+        ],
+      });
+
+      if (product) {
+        res.status(200).json(product);
+      } else {
+        res.status(404).json({ error: "No Product Data Found" });
+      }
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal server error" });
@@ -48,8 +82,6 @@ module.exports = {
 
   createProduct: async (req, res) => {
     const { shopID } = req.query;
-    console.log("REQ", req.body);
-    console.log("REQ FILE", req.files);
 
     const timestamp = Date.now();
     const upload = configureMulter(destinationFolder, timestamp);
@@ -117,5 +149,133 @@ module.exports = {
         }
       }
     );
+  },
+
+  updateProduct: async (req, res) => {
+    const { productID } = req.query;
+
+    // get current image path
+    let currentProductImage = null;
+    try {
+      currentProductImage = await ProductImage.findOne({
+        where: { productID: productID, is_thumbnail: true },
+        attributes: ["prod_image"],
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Cannot Retrieve Product Thumbnail" });
+    }
+
+    let existingThumbnailPath = null;
+    if (currentProductImage) {
+      existingThumbnailPath = `uploads/${currentProductImage?.prod_image}`;
+    }
+
+    // upload image
+    const timestamp = Date.now();
+    const upload = configureMulter(destinationFolder, timestamp);
+
+    upload.fields([{ name: "productThumbnail" }])(
+      req,
+      res,
+      async function (err) {
+        if (err) {
+          console.error(error);
+          return res.status(500).json({ error: "File upload error" });
+        }
+
+        console.log(req.body);
+
+        const { category, productDescription, productName, shopCategory } =
+          req.body;
+
+        // thumbnail path for db
+        let thumbnailPath = null;
+        if (req.files.productThumbnail) {
+          // delete existing image from storage
+          if (existingThumbnailPath) {
+            try {
+              fs.unlinkSync(existingThumbnailPath);
+            } catch (error) {
+              console.error("Error updating thumbnail", error);
+              return res
+                .status(500)
+                .json({ error: "Error Updating Thumbnail" });
+            }
+          }
+          const thumbnailFile = req.files.productThumbnail[0];
+          const thumbnailFilename = `${timestamp}_${thumbnailFile.originalname}`;
+          thumbnailPath = path.join(destinationFolderDB, thumbnailFilename);
+        }
+
+        //update product table
+        try {
+          await Product.update(
+            {
+              categoryID: category,
+              description: productDescription,
+              product_name: productName,
+              shopCategoryID: shopCategory,
+            },
+            { where: { productID: productID } }
+          );
+
+          if (thumbnailPath && currentProductImage) {
+            await ProductImage.update(
+              { prod_image: thumbnailPath },
+              { where: { productID: productID } }
+            );
+          } else if (thumbnailPath && !currentProductImage) {
+            await ProductImage.create({
+              productID: productID,
+              prod_image: thumbnailPath,
+              is_thumbnail: true,
+            });
+          }
+
+          res.status(200).json({ message: "Product updated successfully" });
+        } catch (error) {
+          console.error("Error updating Product:", error);
+        }
+      }
+    );
+  },
+
+  deleteProduct: async (req, res) => {
+    const { productID } = req.query;
+
+    try {
+      await Product.destroy({
+        where: {
+          productID: productID,
+        },
+      });
+
+      await ProductImage.destroy({
+        where: {
+          productID: productID,
+        },
+      });
+      return res.sendStatus(200);
+    } catch (error) {
+      console.error("Delete Product Image Error: ", error);
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Delete Product Failed" });
+    }
+  },
+
+  restoreProduct: async (req, res) => {
+    const { productID } = req.query;
+    try {
+      await Product.restore({ where: { productID: productID } });
+      await ProductImage.restore({ where: { productID: productID } });
+      return res.sendStatus(200);
+    } catch (error) {
+      console.error("Restore Product Error: ", error);
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Cannot Restore Product" });
+    }
   },
 };

@@ -52,6 +52,7 @@ const Product = sequelize.define(
     tableName: "product",
     modelName: "Product",
     timestamps: true,
+    paranoid: true,
   }
 );
 Product.belongsTo(Category, { foreignKey: "categoryID", onDelete: "CASCADE" });

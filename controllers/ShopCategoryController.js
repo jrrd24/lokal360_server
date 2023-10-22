@@ -58,22 +58,34 @@ module.exports = {
     }
   },
 
+  restoreShopCategory: async (req, res)=>{
+    const { shopCategoryID } = req.query;
+    try {
+      await ShopCategory.restore({
+        where: {
+          shopCategoryID: shopCategoryID,
+        },
+      });
+      res.sendStatus(200);
+    } catch (error) {
+      console.error("Restore Shop Category Error: ", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  },
+
   updateShopCategory: async (req, res) => {
     const { shopCategoryID } = req.query;
     try {
       const existingCategory = await ShopCategory.findOne({
         where: {
           shop_category_name: req.body.shopCategoryName,
+          shopID: req.body.shopID,
         },
       });
 
       if (existingCategory) {
-        return res
-          .status(409)
-          .json({ error: "Shop Category With the Same Name Already Exists" });
+        return res.status(409).json({ error: "Shop Category Already Exists" });
       }
-
-      console.log("FID ONE", existingCategory);
 
       await ShopCategory.update(
         { shop_category_name: req.body.shopCategoryName },
@@ -82,7 +94,6 @@ module.exports = {
       return res.sendStatus(200);
     } catch (error) {
       console.error("Delete Shop Category Error: ", error);
-
       res.status(500).json({ error: "Internal Server Error" });
     }
   },

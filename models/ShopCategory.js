@@ -23,6 +23,7 @@ const ShopCategory = sequelize.define(
     tableName: "shop_category",
     modelName: "ShopCategory",
     timestamps: true,
+    paranoid: true,
   }
 );
 

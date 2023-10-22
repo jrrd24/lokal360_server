@@ -31,9 +31,12 @@ VoucherAppliedProduct.belongsTo(Voucher, {
   foreignKey: "voucherID",
   onDelete: "CASCADE",
 });
+Voucher.hasMany(VoucherAppliedProduct, { foreignKey: "voucherID" });
+
 VoucherAppliedProduct.belongsTo(Product, {
   foreignKey: "productID",
   onDelete: "CASCADE",
 });
+Product.hasMany(VoucherAppliedProduct, { foreignKey: "productID" });
 
 module.exports = VoucherAppliedProduct;
