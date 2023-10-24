@@ -11,6 +11,7 @@ const fs = require("fs");
 const sequelize = require("../config/sequelize");
 const ShopCategory = require("../models/ShopCategory");
 const Category = require("../models/Category");
+const { Op } = require("sequelize");
 
 module.exports = {
   // get data of all products of shop
@@ -27,7 +28,7 @@ module.exports = {
         ],
       });
 
-      res.json(allProducts);
+      res.status(200).json(allProducts);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal server error" });
@@ -276,6 +277,52 @@ module.exports = {
       res
         .status(500)
         .json({ error: "Internal Server Error: Cannot Restore Product" });
+    }
+  },
+
+  getAllFeatured: async (req, res) => {
+    const { shopID } = req.query;
+    try {
+      const allFeatured = await Product.findAll({
+        where: { shopID: shopID, is_featured: true },
+        include: [
+          {
+            model: ProductImage,
+            attributes: ["prod_image"],
+          },
+        ],
+      });
+
+      const allNotFeatured = await Product.findAll({
+        where: { shopID: shopID, is_featured: false },
+        include: [
+          {
+            model: ProductImage,
+            attributes: ["prod_image"],
+          },
+        ],
+      });
+
+      res.status(200).json({ allFeatured, allNotFeatured });
+    } catch (error) {}
+  },
+
+  updateFeatured: async (req, res) => {
+    console.log(req.body);
+    try {
+      await Product.update(
+        { is_featured: true },
+        { where: { productID: { [Op.in]: req.body.featuredProducts } } }
+      );
+
+      await Product.update(
+        { is_featured: false },
+        { where: { productID: { [Op.in]: req.body.notFeaturedProducts } } }
+      );
+      res.sendStatus(200);
+    } catch (error) {
+      console.error("add to featured error", error);
+      res.status(500).json({ error: error });
     }
   },
 };

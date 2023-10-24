@@ -93,7 +93,7 @@ module.exports = {
       );
       return res.sendStatus(200);
     } catch (error) {
-      console.error("Delete Shop Category Error: ", error);
+      console.error("Update Shop Category Error: ", error);
       res.status(500).json({ error: "Internal Server Error" });
     }
   },
