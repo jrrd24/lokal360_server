@@ -16,4 +16,6 @@ router.patch(
   controller.restoreShopCategory
 );
 router.patch("/update", verifyJWT.validateToken, controller.updateShopCategory);
+//FOR SHOP CATEGORY PRODUCTS
+router.get("/shop_category_products", controller.getAllShopCategoryProducts);
 module.exports = router;

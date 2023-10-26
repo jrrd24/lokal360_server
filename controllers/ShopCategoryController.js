@@ -1,4 +1,8 @@
+const { Op } = require("sequelize");
+const Product = require("../models/Product");
+const ProductImage = require("../models/ProductImage");
 const ShopCategory = require("../models/ShopCategory");
+const sequelize = require("../config/sequelize");
 
 module.exports = {
   getAllShopCategory: async (req, res) => {
@@ -6,6 +10,30 @@ module.exports = {
     try {
       const allShopCategory = await ShopCategory.findAll({
         where: { shopID: shopID },
+        include: [
+          {
+            model: Product,
+            attributes: [],
+            where: { shopID: shopID },
+            required: false,
+          },
+        ],
+        attributes: [
+          "shopCategoryID",
+          "shopID",
+          "shop_category_name",
+          [
+            sequelize.fn("COUNT", sequelize.col("Products.productID")),
+            "number_of_products",
+          ],
+          [
+            sequelize.literal(
+              "CAST(COALESCE(SUM(Products.total_sold), 0) AS UNSIGNED)"
+            ),
+            "total_sold",
+          ],
+        ],
+        group: ["ShopCategory.shopCategoryID"],
       });
 
       if (allShopCategory.length > 0) {
@@ -37,6 +65,16 @@ module.exports = {
       } else {
         res.status(409).json({ error: "Shop Category Already Exists" });
       }
+
+      if (!shopCategory.shopCategoryID) {
+        return res
+          .status(500)
+          .json({ error: "Failed to create Shop Category" });
+      }
+      await Product.update(
+        { shopCategoryID: shopCategory.shopCategoryID },
+        { where: { productID: { [Op.in]: req.body.shopCategoryProducts } } }
+      );
     } catch (error) {
       console.error("Create Shop Category Error: ", error);
       res.status(500).json({ error: "Internal Server Error" });
@@ -58,7 +96,7 @@ module.exports = {
     }
   },
 
-  restoreShopCategory: async (req, res)=>{
+  restoreShopCategory: async (req, res) => {
     const { shopCategoryID } = req.query;
     try {
       await ShopCategory.restore({
@@ -76,25 +114,78 @@ module.exports = {
   updateShopCategory: async (req, res) => {
     const { shopCategoryID } = req.query;
     try {
-      const existingCategory = await ShopCategory.findOne({
-        where: {
-          shop_category_name: req.body.shopCategoryName,
-          shopID: req.body.shopID,
-        },
-      });
+      // const existingCategory = await ShopCategory.findOne({
+      //   where: {
+      //     shop_category_name: req.body.shopCategoryName,
+      //     shopID: req.body.shopID,
+      //   },
+      // });
 
-      if (existingCategory) {
-        return res.status(409).json({ error: "Shop Category Already Exists" });
-      }
+      // if (existingCategory) {
+      //   return res.status(409).json({ error: "Shop Category Already Exists" });
+      // }
 
       await ShopCategory.update(
         { shop_category_name: req.body.shopCategoryName },
         { where: { shopCategoryID: shopCategoryID } }
       );
+
+      await Product.update(
+        { shopCategoryID: shopCategoryID },
+        { where: { productID: { [Op.in]: req.body.shopCategoryProducts } } }
+      );
+
+      await Product.update(
+        { shopCategoryID: null },
+        { where: { productID: { [Op.in]: req.body.noShopCategoryProducts } } }
+      );
+
       return res.sendStatus(200);
     } catch (error) {
       console.error("Update Shop Category Error: ", error);
       res.status(500).json({ error: "Internal Server Error" });
+    }
+  },
+
+  // Shop Category Products
+  getAllShopCategoryProducts: async (req, res) => {
+    const { shopCategoryID } = req.query;
+    try {
+      const inShopCategory = await Product.findAll({
+        where: { shopCategoryID: shopCategoryID },
+        include: [
+          {
+            model: ProductImage,
+            attributes: ["prod_image"],
+          },
+        ],
+      });
+
+      const notInShopCategory = await Product.findAll({
+        where: {
+          [Op.or]: [
+            { shopCategoryID: null },
+            { "$ShopCategory.deletedAt$": { [Op.not]: null } },
+          ],
+        },
+        include: [
+          {
+            model: ProductImage,
+            attributes: ["prod_image"],
+          },
+          {
+            model: ShopCategory,
+            paranoid: false,
+          },
+        ],
+      });
+
+      res.status(200).json({ inShopCategory, notInShopCategory });
+    } catch (error) {
+      console.log("GET SC PRODS", error);
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Cannot Retrieve Products" });
     }
   },
 };

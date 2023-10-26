@@ -280,6 +280,7 @@ module.exports = {
     }
   },
 
+  //For Featured
   getAllFeatured: async (req, res) => {
     const { shopID } = req.query;
     try {
@@ -304,7 +305,11 @@ module.exports = {
       });
 
       res.status(200).json({ allFeatured, allNotFeatured });
-    } catch (error) {}
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Cannot Retrieve Products" });
+    }
   },
 
   updateFeatured: async (req, res) => {
@@ -322,7 +327,33 @@ module.exports = {
       res.sendStatus(200);
     } catch (error) {
       console.error("add to featured error", error);
-      res.status(500).json({ error: error });
+      res.status(500).json({
+        error: "Internal Server Error: Cannot Update Featured Products",
+      });
+    }
+  },
+
+  //For Top Products
+  getTopProducts: async (req, res) => {
+    const { shopID } = req.query;
+
+    try {
+      const topProducts = await Product.findAll({
+        limit: 5,
+        order: [["total_sold", "DESC"]],
+        where: { shopID: shopID },
+        include: [
+          {
+            model: ProductImage,
+            attributes: ["prod_image"],
+          },
+        ],
+      });
+      res.status(200).json({ topProducts });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Cannot Retrieve Top Products" });
     }
   },
 };

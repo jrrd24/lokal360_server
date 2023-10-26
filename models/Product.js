@@ -19,6 +19,7 @@ const Product = sequelize.define(
     },
     shopCategoryID: {
       type: DataTypes.INTEGER,
+      allowNull: true,
     },
     shopID: {
       type: DataTypes.INTEGER,

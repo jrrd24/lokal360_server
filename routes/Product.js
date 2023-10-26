@@ -17,5 +17,7 @@ router.patch(
   verifyJWT.validateToken,
   controller.updateFeatured
 );
+//For top products
+router.get("/top_products", controller.getTopProducts);
 
 module.exports = router;
