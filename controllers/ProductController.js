@@ -5,6 +5,8 @@ const VoucherAppliedProduct = require("../models/VoucherAppliedProduct");
 const path = require("path");
 const destinationFolder = "uploads/shop/product";
 const destinationFolderDB = "shop/product";
+const destinationFolderVar = "uploads/shop/variation";
+const destinationFolderVarDB = "shop/variation";
 const configureMulter = require("../helpers/MulterConfig");
 const upload = configureMulter(destinationFolder);
 const fs = require("fs");
@@ -48,7 +50,7 @@ module.exports = {
           },
           { model: ShopCategory, attributes: ["shop_category_name"] },
           { model: Category, attributes: ["category_name"] },
-          { model: ProductVariation },
+          { model: ProductVariation, required: false },
           { model: VoucherAppliedProduct },
         ],
       });
@@ -181,11 +183,9 @@ module.exports = {
       res,
       async function (err) {
         if (err) {
-          console.error(error);
+          console.error(err);
           return res.status(500).json({ error: "File upload error" });
         }
-
-        console.log(req.body);
 
         const { category, productDescription, productName, shopCategory } =
           req.body;
@@ -237,6 +237,7 @@ module.exports = {
           res.status(200).json({ message: "Product updated successfully" });
         } catch (error) {
           console.error("Error updating Product:", error);
+          res.status(500).json({ error: "Internal Server Error" });
         }
       }
     );
@@ -355,5 +356,160 @@ module.exports = {
         .status(500)
         .json({ error: "Internal Server Error: Cannot Retrieve Top Products" });
     }
+  },
+
+  //For Product Variations
+  createVariation: async (req, res) => {
+    const { productID } = req.query;
+
+    const timestamp = Date.now();
+    const upload = configureMulter(destinationFolderVar, timestamp);
+
+    upload.fields([{ name: "variationThumbnail" }])(
+      req,
+      res,
+      async function (err) {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "File upload error" });
+        }
+
+        const { amountOnHand, price, variationName } = req.body;
+        let variationThumbnailPath = null;
+        if (req.files.variationThumbnail) {
+          const variationThumbnailFile = req.files.variationThumbnail[0];
+          const variationThumbnailFilename = `${timestamp}_${variationThumbnailFile.originalname}`;
+          variationThumbnailPath = path.join(
+            destinationFolderVarDB,
+            variationThumbnailFilename
+          );
+        }
+
+        try {
+          const [variaion, created] = await ProductVariation.findOrCreate({
+            where: {
+              var_name: variationName,
+              productID: productID,
+            },
+            defaults: {
+              productID: productID,
+              var_name: variationName,
+              price: price,
+              var_image: variationThumbnailPath ? variationThumbnailPath : null,
+              amt_on_hand: amountOnHand,
+              status:
+                amountOnHand > 10
+                  ? "In Stock"
+                  : amountOnHand < 10
+                  ? "Low Stock"
+                  : "Out of Stock",
+            },
+          });
+
+          if (created) {
+            res
+              .status(200)
+              .json({ message: "New Variation Created Successfully" });
+          } else {
+            res.status(409).json({ error: "Varitaion Already Exists" });
+          }
+        } catch (error) {
+          console.error("Create Variation Error:", error);
+          res.status(500).json({ error: "Internal Server Error" });
+        }
+      }
+    );
+  },
+
+  updateVariation: async (req, res) => {
+    const { prodVariationID } = req.query;
+
+    // Get the current variation image path.
+    let currentVariationImage = null;
+    try {
+      currentVariationImage = await ProductVariation.findOne({
+        where: { prodVariationID: prodVariationID },
+        attributes: ["var_image"],
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Cannot Retrieve Variation Thumbnail" });
+    }
+
+    // Check if the current variation image path is not null.
+    let existingThumbnailPath = null;
+    if (currentVariationImage) {
+      existingThumbnailPath = `uploads/${currentVariationImage.var_image}`;
+    }
+
+    // Upload the new image and delete the old image if it exists.
+    const timestamp = Date.now();
+    const upload = configureMulter(destinationFolderVar, timestamp);
+
+    upload.fields([{ name: "variationThumbnail" }])(
+      req,
+      res,
+      async function (err) {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: "File upload error" });
+        }
+
+        const { amountOnHand, price, variationName } = req.body;
+
+        let variationThumbnailPath = null;
+        if (req.files.variationThumbnail) {
+          // Delete the old image if it exists.
+          if (existingThumbnailPath) {
+            try {
+              fs.unlinkSync(existingThumbnailPath);
+            } catch (error) {
+              console.error("Error updating thumbnail", error);
+              // You can also add a message to the response here.
+            }
+          }
+
+          // Upload the new image.
+          const variationThumbnailFile = req.files.variationThumbnail[0];
+          const variationThumbnailFilename = `${timestamp}_${variationThumbnailFile.originalname}`;
+          variationThumbnailPath = path.join(
+            destinationFolderVarDB,
+            variationThumbnailFilename
+          );
+        }
+
+        // Update the variation in the database.
+        try {
+          await ProductVariation.update(
+            {
+              var_name: variationName,
+              price: price,
+              amt_on_hand: amountOnHand,
+              status:
+                amountOnHand > 10
+                  ? "In Stock"
+                  : amountOnHand < 10
+                  ? "Low Stock"
+                  : "Out of Stock",
+            },
+            { where: { prodVariationID: prodVariationID } }
+          );
+
+          if (variationThumbnailPath && currentVariationImage) {
+            await ProductVariation.update(
+              { var_image: variationThumbnailPath },
+              { where: { prodVariationID: prodVariationID } }
+            );
+          }
+
+          res
+            .status(200)
+            .json({ message: "Product Variation updated successfully" });
+        } catch (error) {
+          console.error("Error updating Product:", error);
+          res.status(500).json({ error: "Internal Server Error" });
+        }
+      }
+    );
   },
 };

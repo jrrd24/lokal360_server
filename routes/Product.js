@@ -19,5 +19,16 @@ router.patch(
 );
 //For top products
 router.get("/top_products", controller.getTopProducts);
+//For Product Variation
+router.post(
+  "/variation/create",
+  verifyJWT.validateToken,
+  controller.createVariation
+);
+router.patch(
+  "/variation/update",
+  verifyJWT.validateToken,
+  controller.updateVariation
+);
 
 module.exports = router;

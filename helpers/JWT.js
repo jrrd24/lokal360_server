@@ -21,7 +21,7 @@ const createTokens = (user) => {
   const accessToken = sign(
     { userID: user.userID, roles: roles },
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: `15m` }
+    { expiresIn: `30m` }
   );
 
   const refreshToken = sign(
