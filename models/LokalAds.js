@@ -49,6 +49,7 @@ const LokalAds = sequelize.define(
     tableName: "lokal_ads",
     modelName: "LokalAds",
     timestamps: true,
+    paranoid: true,
   }
 );
 

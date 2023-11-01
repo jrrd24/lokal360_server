@@ -37,9 +37,7 @@ const Product = sequelize.define(
     description: {
       type: DataTypes.STRING(500),
     },
-    archived_at: {
-      type: DataTypes.DATE,
-    },
+
     // total_sold: {
     //   type: DataTypes.INTEGER,
     //   defaultValue: 0,

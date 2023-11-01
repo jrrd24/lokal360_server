@@ -36,6 +36,7 @@ const Voucher = sequelize.define(
     tableName: "voucher",
     modelName: "Voucher",
     timestamps: true,
+    paranoid: true,
   }
 );
 

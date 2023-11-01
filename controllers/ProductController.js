@@ -14,6 +14,8 @@ const sequelize = require("../config/sequelize");
 const ShopCategory = require("../models/ShopCategory");
 const Category = require("../models/Category");
 const { Op } = require("sequelize");
+const Promo = require("../models/Promo");
+const PromoType = require("../models/PromoType");
 
 module.exports = {
   // get data of all products of shop
@@ -88,6 +90,17 @@ module.exports = {
           },
           { model: ShopCategory, attributes: ["shop_category_name"] },
           { model: Category, attributes: ["category_name"] },
+          {
+            model: Promo,
+            attributes: [
+              "promoID",
+              "promoTypeID",
+              "discount_amount",
+              "min_spend",
+            ],
+            include: [{ model: PromoType, attributes: ["promo_type_name"] }],
+            required: false,
+          },
           { model: ProductVariation, required: false },
           { model: VoucherAppliedProduct },
         ],

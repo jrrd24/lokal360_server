@@ -130,17 +130,6 @@ module.exports = {
   updateShopCategory: async (req, res) => {
     const { shopCategoryID } = req.query;
     try {
-      // const existingCategory = await ShopCategory.findOne({
-      //   where: {
-      //     shop_category_name: req.body.shopCategoryName,
-      //     shopID: req.body.shopID,
-      //   },
-      // });
-
-      // if (existingCategory) {
-      //   return res.status(409).json({ error: "Shop Category Already Exists" });
-      // }
-
       await ShopCategory.update(
         { shop_category_name: req.body.shopCategoryName },
         { where: { shopCategoryID: shopCategoryID } }

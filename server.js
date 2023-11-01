@@ -18,6 +18,7 @@ const shopInfoRoute = require("./routes/ShopInfo");
 const categoryRoute = require("./routes/Category");
 const shopCategoryRoute = require("./routes/ShopCategory");
 const productRoute = require("./routes/Product");
+const promoRoute = require("./routes/Promo");
 
 //initalize functions
 const app = express();
@@ -74,6 +75,7 @@ app.use("/api/shopInfo", shopInfoRoute);
 app.use("/api/shop_category", shopCategoryRoute);
 app.use("/api/category", categoryRoute);
 app.use("/api/product", productRoute);
+app.use("/api/promo", promoRoute);
 app.use(verifyJWT.validateToken);
 app.use("/api/home", homeRoute);
 app.use("/api/profile", profileRoute);

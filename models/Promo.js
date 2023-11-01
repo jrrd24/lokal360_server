@@ -14,23 +14,25 @@ const Promo = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    promo_type: {
-      type: DataTypes.STRING(20),
+    promoTypeID: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     discount_amount: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
     min_spend: {
-      type: DataTypes.DECIMAL,
-      allowNull: false,
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      defaultValue: 0,
     },
   },
   {
     tableName: "promo",
     modelName: "Promo",
     timestamps: true,
+    paranoid: true,
   }
 );
 
