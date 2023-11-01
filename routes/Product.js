@@ -19,6 +19,8 @@ router.patch(
 );
 //For top products
 router.get("/top_products", controller.getTopProducts);
+//For Product Statis Count
+router.get("/prod_status_count", controller.getProductStatusCount);
 //For Product Variation
 router.post(
   "/variation/create",
@@ -30,5 +32,14 @@ router.patch(
   verifyJWT.validateToken,
   controller.updateVariation
 );
-
+router.delete(
+  "/variation/delete",
+  verifyJWT.validateToken,
+  controller.deleteVariation
+);
+router.patch(
+  "/variation/restore",
+  verifyJWT.validateToken,
+  controller.restoreVariation
+);
 module.exports = router;

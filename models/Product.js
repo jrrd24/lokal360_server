@@ -40,10 +40,10 @@ const Product = sequelize.define(
     archived_at: {
       type: DataTypes.DATE,
     },
-    total_sold: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
-    },
+    // total_sold: {
+    //   type: DataTypes.INTEGER,
+    //   defaultValue: 0,
+    // },
     is_featured: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,

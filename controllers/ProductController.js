@@ -20,7 +20,7 @@ module.exports = {
   getAllShopProduct: async (req, res) => {
     const { shopID } = req.query;
     try {
-      const allProducts = await Product.findAll({
+      const allProductsData = await Product.findAll({
         where: { shopID: shopID },
         include: [
           {
@@ -29,6 +29,43 @@ module.exports = {
           },
         ],
       });
+
+      //GET STATUS COUNT
+
+      const allProducts = await Promise.all(
+        allProductsData.map(async (product) => {
+          const inStock = await ProductVariation.count({
+            where: { productID: product.productID, status: "In Stock" },
+          });
+          const lowStock = await ProductVariation.count({
+            where: { productID: product.productID, status: "Low Stock" },
+          });
+          const outOfStock = await ProductVariation.count({
+            where: { productID: product.productID, status: "Out Of Stock" },
+          });
+
+          let prodStatus = "Discontinued";
+          if (outOfStock >= 1) {
+            prodStatus = "Out Of Stock";
+          } else if (lowStock >= 1) {
+            prodStatus = "Low Stock";
+          } else if (inStock >= 1) {
+            prodStatus = "In Stock";
+          }
+
+          //GET TOTAL SOLD FROM VAR
+          const varTotalSold = await ProductVariation.sum("amt_sold", {
+            where: { productID: product.productID },
+          });
+
+          // Add status property to the product object
+          return {
+            ...product.toJSON(),
+            status: prodStatus,
+            total_sold: varTotalSold || 0,
+          };
+        })
+      );
 
       res.status(200).json(allProducts);
     } catch (error) {
@@ -43,6 +80,7 @@ module.exports = {
     try {
       const product = await Product.findOne({
         where: { productID: productID },
+
         include: [
           {
             model: ProductImage,
@@ -56,6 +94,48 @@ module.exports = {
       });
 
       if (product) {
+        //GET PRODUCT STATUS
+        const inStock = await ProductVariation.count({
+          where: { productID: product.productID, status: "In Stock" },
+        });
+        const lowStock = await ProductVariation.count({
+          where: { productID: product.productID, status: "Low Stock" },
+        });
+        const outOfStock = await ProductVariation.count({
+          where: { productID: product.productID, status: "Out Of Stock" },
+        });
+
+        let prodStatus = "Discontinued";
+        if (outOfStock >= 1) {
+          prodStatus = "Out Of Stock";
+        } else if (lowStock >= 1) {
+          prodStatus = "Low Stock";
+        } else if (inStock >= 1) {
+          prodStatus = "In Stock";
+        }
+
+        // GET NUMBER OF VARIATIONS
+        const variationCount = await ProductVariation.count({
+          where: { productID: productID },
+        });
+
+        // GET MIN PRICE
+        const minVarPrice = await ProductVariation.min("price", {
+          where: { productID: productID },
+        });
+
+        //GET TOTAL SOLD FROM VAR
+        const varTotalSold = await ProductVariation.sum("amt_sold", {
+          where: { productID: productID },
+        });
+
+        //GET TOTAL SALES
+
+        product.dataValues.total_sold = varTotalSold;
+        product.dataValues.price = minVarPrice;
+        product.dataValues.prod_status = prodStatus;
+        product.dataValues.number_of_variations = variationCount;
+
         res.status(200).json(product);
       } else {
         res.status(404).json({ error: "No Product Data Found" });
@@ -260,7 +340,7 @@ module.exports = {
       });
       return res.sendStatus(200);
     } catch (error) {
-      console.error("Delete Product Image Error: ", error);
+      console.error("Delete Product Error: ", error);
       res
         .status(500)
         .json({ error: "Internal Server Error: Delete Product Failed" });
@@ -285,7 +365,7 @@ module.exports = {
   getAllFeatured: async (req, res) => {
     const { shopID } = req.query;
     try {
-      const allFeatured = await Product.findAll({
+      const allFeaturedData = await Product.findAll({
         where: { shopID: shopID, is_featured: true },
         include: [
           {
@@ -304,6 +384,28 @@ module.exports = {
           },
         ],
       });
+
+      const allFeatured = await Promise.all(
+        allFeaturedData.map(async (product) => {
+          // GET PRICE
+          const minVarPrice = await ProductVariation.min("price", {
+            where: { productID: product.productID },
+          });
+
+          //GET TOTAL SOLD FROM VAR
+          const varTotalSold = await ProductVariation.sum("amt_sold", {
+            where: { productID: product.productID },
+          });
+
+          // TODO: EDIT THIS TO ALSO INCLUDE DISCOUNTED PRICE
+          return {
+            ...product.toJSON(),
+            price: minVarPrice,
+            orig_price: minVarPrice,
+            total_sold: varTotalSold,
+          };
+        })
+      );
 
       res.status(200).json({ allFeatured, allNotFeatured });
     } catch (error) {
@@ -339,9 +441,16 @@ module.exports = {
     const { shopID } = req.query;
 
     try {
-      const topProducts = await Product.findAll({
+      const topProductsData = await Product.findAll({
         limit: 5,
-        order: [["total_sold", "DESC"]],
+        order: [
+          [
+            sequelize.literal(
+              "(SELECT SUM(`ProductVariations`.`amt_sold`) FROM `product_variation` AS `ProductVariations` WHERE `ProductVariations`.`productID` = `Product`.`productID`)"
+            ),
+            "DESC",
+          ],
+        ],
         where: { shopID: shopID },
         include: [
           {
@@ -350,11 +459,83 @@ module.exports = {
           },
         ],
       });
+
+      const topProducts = await Promise.all(
+        topProductsData.map(async (product) => {
+          //GET TOTAL SOLD FROM VAR
+          const varTotalSold = await ProductVariation.sum("amt_sold", {
+            where: { productID: product.productID },
+          });
+
+          // Add status property to the product object
+          return {
+            ...product.toJSON(),
+            total_sold: varTotalSold || 0,
+          };
+        })
+      );
+
       res.status(200).json({ topProducts });
     } catch (error) {
       res
         .status(500)
         .json({ error: "Internal Server Error: Cannot Retrieve Top Products" });
+    }
+  },
+
+  //For Product Status Summary
+  getProductStatusCount: async (req, res) => {
+    const { shopID } = req.query;
+
+    try {
+      const allProductsData = await Product.findAll({
+        where: { shopID: shopID },
+        attributes: ["productID"],
+      });
+
+      //GET STATUS COUNT
+      let inStockCount = 0;
+      let lowStockCount = 0;
+      let outOfStockCount = 0;
+      let discontinuedCount = 0;
+
+      await Promise.all(
+        allProductsData.map(async (product) => {
+          const inStock = await ProductVariation.count({
+            where: { productID: product.productID, status: "In Stock" },
+          });
+          const lowStock = await ProductVariation.count({
+            where: { productID: product.productID, status: "Low Stock" },
+          });
+          const outOfStock = await ProductVariation.count({
+            where: { productID: product.productID, status: "Out Of Stock" },
+          });
+          const discontinued = await ProductVariation.count({
+            where: {
+              productID: product.productID,
+              deletedAt: { [Op.ne]: null },
+            },
+            paranoid: false, // Include soft deleted records
+          });
+
+          inStockCount += inStock;
+          lowStockCount += lowStock;
+          outOfStockCount += outOfStock;
+          discontinuedCount += discontinued;
+        })
+      );
+
+      const statusSummary = {
+        in_stock_count: inStockCount,
+        low_stock_count: lowStockCount,
+        out_of_stock_count: outOfStockCount,
+        discontinued_count: discontinuedCount,
+      };
+
+      res.status(200).json(statusSummary);
+    } catch (error) {
+      console.error("Get Product Status Count Error", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   },
 
@@ -400,7 +581,7 @@ module.exports = {
               status:
                 amountOnHand > 10
                   ? "In Stock"
-                  : amountOnHand < 10
+                  : amountOnHand < 10 && amountOnHand > 0
                   ? "Low Stock"
                   : "Out of Stock",
             },
@@ -488,7 +669,7 @@ module.exports = {
               status:
                 amountOnHand > 10
                   ? "In Stock"
-                  : amountOnHand < 10
+                  : amountOnHand < 10 && amountOnHand > 0
                   ? "Low Stock"
                   : "Out of Stock",
             },
@@ -511,5 +692,40 @@ module.exports = {
         }
       }
     );
+  },
+
+  deleteVariation: async (req, res) => {
+    const { prodVariationID } = req.query;
+
+    try {
+      await ProductVariation.destroy({
+        where: { prodVariationID: prodVariationID },
+      });
+      return res.sendStatus(200);
+    } catch (error) {
+      console.error("Delete Product Variation Error: ", error);
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Delete Variation Failed" });
+    }
+  },
+
+  restoreVariation: async (req, res) => {
+    const { prodVariationID } = req.query;
+
+    try {
+      await ProductVariation.restore({
+        where: {
+          prodVariationID: prodVariationID,
+        },
+      });
+
+      res.sendStatus(200);
+    } catch (error) {
+      console.error("Restore Variation Error: ", error);
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Cannot Restore Variation" });
+    }
   },
 };

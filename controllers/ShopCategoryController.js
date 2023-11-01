@@ -1,5 +1,6 @@
 const { Op } = require("sequelize");
 const Product = require("../models/Product");
+const ProductVariation = require("../models/ProductVariation");
 const ProductImage = require("../models/ProductImage");
 const ShopCategory = require("../models/ShopCategory");
 const sequelize = require("../config/sequelize");
@@ -16,6 +17,13 @@ module.exports = {
             attributes: [],
             where: { shopID: shopID },
             required: false,
+            include: [
+              {
+                model: ProductVariation,
+                attributes: [],
+                required: false,
+              },
+            ],
           },
         ],
         attributes: [
@@ -23,13 +31,21 @@ module.exports = {
           "shopID",
           "shop_category_name",
           [
-            sequelize.fn("COUNT", sequelize.col("Products.productID")),
+            sequelize.fn(
+              "COUNT",
+              sequelize.fn("DISTINCT", sequelize.col("Products.productID"))
+            ),
             "number_of_products",
           ],
           [
-            sequelize.literal(
-              "CAST(COALESCE(SUM(Products.total_sold), 0) AS UNSIGNED)"
+            sequelize.cast(
+              sequelize.fn(
+                "SUM",
+                sequelize.col("Products.ProductVariations.amt_sold")
+              ),
+              "unsigned"
             ),
+
             "total_sold",
           ],
         ],

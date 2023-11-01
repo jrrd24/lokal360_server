@@ -43,6 +43,7 @@ const ProductVariation = sequelize.define(
     tableName: "product_variation",
     modelName: "ProductVariation",
     timestamps: true,
+    paranoid: true,
   }
 );
 
