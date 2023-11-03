@@ -20,15 +20,11 @@ const Voucher = sequelize.define(
       allowNull: false,
     },
     start_date: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: false,
     },
     end_date: {
-      type: DataTypes.DATEONLY,
-      allowNull: false,
-    },
-    is_active: {
-      type: DataTypes.BOOLEAN,
+      type: DataTypes.DATE,
       allowNull: false,
     },
   },

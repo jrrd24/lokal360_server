@@ -23,7 +23,8 @@ const VoucherAppliedProduct = sequelize.define(
   {
     tableName: "voucher_applied_product",
     modelName: "VoucherAppliedProduct",
-    timestamps: false,
+    timestamps: true,
+    paranoid: true,
   }
 );
 
