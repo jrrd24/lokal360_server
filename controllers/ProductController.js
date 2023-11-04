@@ -2,6 +2,7 @@ const Product = require("../models/Product");
 const ProductImage = require("../models/ProductImage");
 const ProductVariation = require("../models/ProductVariation");
 const VoucherAppliedProduct = require("../models/VoucherAppliedProduct");
+const Shop = require("../models/Shop");
 const path = require("path");
 const destinationFolder = "uploads/shop/product";
 const destinationFolderDB = "shop/product";
@@ -16,6 +17,7 @@ const Category = require("../models/Category");
 const { Op } = require("sequelize");
 const Promo = require("../models/Promo");
 const PromoType = require("../models/PromoType");
+const Voucher = require("../models/Voucher");
 
 module.exports = {
   // get data of all products of shop
@@ -102,7 +104,30 @@ module.exports = {
             required: false,
           },
           { model: ProductVariation, required: false },
-          { model: VoucherAppliedProduct },
+          {
+            model: VoucherAppliedProduct,
+            required: false,
+            attributes: ["voucherAppliedProductID"],
+            include: [
+              {
+                model: Voucher,
+                attributes: ["end_date", "start_date"],
+                include: [
+                  {
+                    model: Promo,
+                    attributes: ["discount_amount", "min_spend"],
+                    include: [
+                      {
+                        model: PromoType,
+                        attributes: ["promo_type_name"],
+                      },
+                    ],
+                  },
+                  { model: Shop, attributes: ["shop_name", "logo_img_link"] },
+                ],
+              },
+            ],
+          },
         ],
       });
 
@@ -143,7 +168,6 @@ module.exports = {
         });
 
         //GET TOTAL SALES
-
         product.dataValues.total_sold = varTotalSold;
         product.dataValues.price = minVarPrice;
         product.dataValues.prod_status = prodStatus;

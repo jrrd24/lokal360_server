@@ -57,8 +57,73 @@ module.exports = {
           promo_type: voucher.Promo.PromoType.promo_type_name,
         };
       });
+      //SORT
+      allShopVoucher.sort((a, b) =>
+        a.is_active === b.is_active ? 0 : a.is_active ? -1 : 1
+      );
 
       res.status(200).json(allShopVoucher);
+    } catch (error) {
+      console.error("Get All Shop Vouchers Error", error);
+      res.sendStatus(500);
+    }
+  },
+
+  getAllActiveShopVoucher: async (req, res) => {
+    const currentDate = new Date();
+    const { shopID } = req.query;
+
+    try {
+      const activeVoucherData = await Voucher.findAll({
+        where: {
+          shopID: shopID,
+          start_date: { [Op.lte]: currentDate },
+          end_date: { [Op.gte]: currentDate },
+        },
+        attributes: [
+          "voucherID",
+          "shopID",
+          "promoID",
+          "start_date",
+          "end_date",
+        ],
+        include: [
+          {
+            model: Promo,
+            attributes: ["promoID", "discount_amount", "min_spend"],
+            include: [
+              {
+                model: PromoType,
+                attributes: ["promo_type_name"], // Include promo_type_name attribute
+              },
+            ],
+          },
+          { model: Shop, attributes: ["shop_name", "logo_img_link"] },
+        ],
+      });
+
+      const allActiveVoucher = activeVoucherData.map((voucher) => {
+        const startDate = new Date(voucher.start_date);
+        const endDate = new Date(voucher.end_date);
+
+        const isActive = currentDate >= startDate && currentDate <= endDate;
+
+        return {
+          voucherID: voucher.voucherID,
+          shopID: voucher.shopID,
+          shop_name: voucher.Shop.shop_name,
+          logo_img_link: voucher.Shop.logo_img_link,
+          promoID: voucher.promoID,
+          discount_amount: voucher.Promo.discount_amount,
+          min_spend: voucher.Promo.min_spend,
+          start_date: startDate,
+          end_date: endDate,
+          is_active: isActive,
+          promo_type: voucher.Promo.PromoType.promo_type_name,
+        };
+      });
+
+      res.status(200).json(allActiveVoucher);
     } catch (error) {
       console.error("Get All Shop Vouchers Error", error);
       res.sendStatus(500);
@@ -138,6 +203,36 @@ module.exports = {
       res.sendStatus(200);
     } catch (error) {
       console.error("Update Voucher Error: ", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  },
+
+  deleteVoucher: async (req, res) => {
+    const { voucherID } = req.query;
+
+    try {
+      await Voucher.destroy({
+        where: { voucherID: voucherID },
+      });
+
+      res.sendStatus(200);
+    } catch (error) {
+      console.error("Delete Voucher Error: ", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  },
+
+  restoreVoucher: async (req, res) => {
+    const { voucherID } = req.query;
+
+    try {
+      await Voucher.restore({
+        where: { voucherID: voucherID },
+      });
+
+      res.sendStatus(200);
+    } catch (error) {
+      console.error("Restore Voucher Error: ", error);
       res.status(500).json({ error: "Internal Server Error" });
     }
   },
