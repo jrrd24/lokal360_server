@@ -20,7 +20,7 @@ const shopCategoryRoute = require("./routes/ShopCategory");
 const productRoute = require("./routes/Product");
 const promoRoute = require("./routes/Promo");
 const voucherRoute = require("./routes/Voucher");
-
+const adRoute = require("./routes/Ad");
 //initalize functions
 const app = express();
 const port = 8800;
@@ -78,6 +78,7 @@ app.use("/api/category", categoryRoute);
 app.use("/api/product", productRoute);
 app.use("/api/promo", promoRoute);
 app.use("/api/voucher", voucherRoute);
+app.use("/api/ad", adRoute);
 app.use(verifyJWT.validateToken);
 app.use("/api/home", homeRoute);
 app.use("/api/profile", profileRoute);

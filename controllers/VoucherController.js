@@ -145,7 +145,7 @@ module.exports = {
     endDateTime.setMinutes(endDateTime.getMinutes() - timezoneOffset);
 
     try {
-      const [voucher, created] = await Voucher.findOrCreate({
+      const [voucher, creatconsted] = await Voucher.findOrCreate({
         where: {
           shopID: shopID,
           promoID: req.body?.promoID,

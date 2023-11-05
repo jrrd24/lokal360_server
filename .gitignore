@@ -11,3 +11,5 @@ uploads/shop/product/*
 !uploads/shop/product/.gitignore
 uploads/shop/variation/*
 !uploads/shop/variation/.gitignore
+uploads/shop/ads/*
+!uploads/shop/ads/.gitignore

@@ -14,25 +14,30 @@ const LokalAds = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    name: {
+    ad_name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
     start_date: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: false,
     },
     end_date: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
       allowNull: false,
     },
+
+    //TYPES
+    //  1: Shop Page
+    //  2: Sitewide
     type: {
-      type: DataTypes.STRING(10),
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     status: {
       type: DataTypes.STRING(20),
       allowNull: false,
+      defaultValue: "Pending Approval",
     },
     message: {
       type: DataTypes.STRING(500),
