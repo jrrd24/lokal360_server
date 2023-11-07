@@ -39,7 +39,7 @@ const ShopEmployee = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
-    access_shopInformation: {
+    access_shop_information: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
@@ -60,6 +60,7 @@ const ShopEmployee = sequelize.define(
     tableName: "shop_employee",
     modelName: "ShopEmployee",
     timestamps: true,
+    paranoid: true,
   }
 );
 
