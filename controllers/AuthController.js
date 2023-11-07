@@ -109,7 +109,7 @@ module.exports = {
         }
 
         let userShopEmployeeID = null;
-        console.log("USER ID", userID);
+        let employeePriviledges = {};
         try {
           userShopEmployeeID = await ShopEmployee.findOne({
             where: { userID: userID },
@@ -120,8 +120,21 @@ module.exports = {
         }
         if (userShopEmployeeID) {
           shopID = userShopEmployeeID.shopID;
+          console.log("EMPLOYEE-DATA", userShopEmployeeID);
+          const accessRights = {
+            accessAnalytics: userShopEmployeeID.access_analytics || false,
+            accessProducts: userShopEmployeeID.access_products || false,
+            accessCustomers: userShopEmployeeID.access_customers || false,
+            accessOrders: userShopEmployeeID.access_orders || false,
+            accessShopInformation:
+              userShopEmployeeID.access_shop_information || false,
+            accessPromos: userShopEmployeeID.access_promos || false,
+            accessLokalAds: userShopEmployeeID.access_lokal_ads || false,
+            accessVouchers: userShopEmployeeID.access_vouchers || false,
+          };
+
+          employeePriviledges = accessRights;
         }
-        console.log("USEID", userShopEmployeeID);
 
         // Extract the tokens from the returned object
         const accessToken = tokens.accessToken;
@@ -148,7 +161,9 @@ module.exports = {
           maxAge: 30 * 24 * 60 * 60 * 1000,
         }); // Add: secure:true in prod (only works for https)
 
-        res.status(200).json({ accessToken, roles, userID, shopID });
+        res
+          .status(200)
+          .json({ accessToken, roles, userID, shopID, employeePriviledges });
       }
     } catch (err) {
       res.status(400).json({ error: err });

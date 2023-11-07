@@ -25,7 +25,7 @@ module.exports = {
     }
 
     // delete token from db
-    await User.update({ token: "" }, { where: { userID: foundUser.userID } });
+    await User.update({ token: null }, { where: { userID: foundUser.userID } });
     //clear cookie
     res.clearCookie("jwt", {
       httpOnly: true,

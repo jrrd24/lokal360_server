@@ -68,7 +68,7 @@ module.exports = {
         }
 
         let userShopEmployeeID = null;
-        console.log("USER ID", userID);
+        let employeePriviledges = {};
         try {
           userShopEmployeeID = await ShopEmployee.findOne({
             where: { userID: userID },
@@ -79,9 +79,22 @@ module.exports = {
         }
         if (userShopEmployeeID) {
           shopID = userShopEmployeeID.shopID;
+          const accessRights = {
+            accessAnalytics: userShopEmployeeID.access_analytics || false,
+            accessProducts: userShopEmployeeID.access_products || false,
+            accessCustomers: userShopEmployeeID.access_customers || false,
+            accessOrders: userShopEmployeeID.access_orders || false,
+            accessShopInformation:
+              userShopEmployeeID.access_shop_information || false,
+            accessPromos: userShopEmployeeID.access_promos || false,
+            accessLokalAds: userShopEmployeeID.access_lokal_ads || false,
+            accessVouchers: userShopEmployeeID.access_vouchers || false,
+          };
+
+          employeePriviledges = accessRights;
         }
 
-        res.json({ accessToken, roles, userID, shopID });
+        res.json({ accessToken, roles, userID, shopID, employeePriviledges });
       }
     );
   },
