@@ -181,7 +181,6 @@ module.exports = {
   },
 
   updateVoucher: async (req, res) => {
-    console.log("REEQ", req.body);
     const { voucherID } = req.query;
     try {
       await VoucherAppliedProduct.destroy({
@@ -203,7 +202,7 @@ module.exports = {
       res.sendStatus(200);
     } catch (error) {
       console.error("Update Voucher Error: ", error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res.status(500).json({ error: `Internal Server Error: ${error}` });
     }
   },
 

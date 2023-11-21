@@ -35,7 +35,6 @@ module.exports = {
       });
 
       //GET STATUS COUNT
-
       const allProducts = await Promise.all(
         allProductsData.map(async (product) => {
           const inStock = await ProductVariation.count({

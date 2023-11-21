@@ -188,7 +188,7 @@ module.exports = {
       res.sendStatus(200);
     } catch (error) {
       console.error("Delete Shop Employee Error: ", error);
-      res.status(500).json({ error: "Internal Server Error" });
+      res.status(500).json({ error: `Internal Server Error: ${error}` });
     }
   },
 

@@ -10,6 +10,10 @@ const Chat = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
+    inboxID: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     senderID: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -18,19 +22,15 @@ const Chat = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    meta: {
-      type: DataTypes.STRING(255),
-    },
-    deleted_user_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
   },
   {
     tableName: "chat",
-    timestamps: false,
+    timestamps: true,
+    paranoid: false,
   }
 );
+
+//TODO: fix relationship
 
 Chat.belongsTo(User, { foreignKey: "senderID", onDelete: "CASCADE" });
 User.hasMany(Chat, { foreignKey: "senderID" });
