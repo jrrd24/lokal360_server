@@ -1,8 +1,6 @@
 const User = require("../models/User");
 const Shopper = require("../models/Shopper");
 const DeliverAddress = require("../models/DeliveryAddress");
-const bcrypt = require("bcrypt");
-const { createTokens } = require("../helpers/JWT");
 
 module.exports = {
   //get all users
@@ -145,4 +143,5 @@ module.exports = {
       res.status(500).json({ error: `Internal Server Error: ${error}` });
     }
   },
+
 };

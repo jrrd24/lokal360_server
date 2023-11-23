@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const Order = require("./Order");
-const Product = require("./Product");
+const ProductVariation = require("./ProductVariation");
 
 const OrderItem = sequelize.define(
   "OrderItem",
@@ -15,20 +15,12 @@ const OrderItem = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    productVariationID: {
+    prodVariationID: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
     quantity: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    price: {
-      type: DataTypes.DECIMAL,
-      allowNull: false,
-    },
-    variation: {
-      type: DataTypes.STRING(50),
       allowNull: false,
     },
   },
@@ -41,5 +33,10 @@ const OrderItem = sequelize.define(
 
 OrderItem.belongsTo(Order, { foreignKey: "orderID", onDelete: "CASCADE" });
 Order.hasMany(OrderItem, { foreignKey: "orderID" });
-OrderItem.belongsTo(Product, { foreignKey: "productID", onDelete: "CASCADE" });
-Product.hasMany(OrderItem, { foreignKey: "productID" });
+OrderItem.belongsTo(ProductVariation, {
+  foreignKey: "prodVariationID",
+  onDelete: "CASCADE",
+});
+ProductVariation.hasMany(OrderItem, { foreignKey: "prodVariationID" });
+
+module.exports = OrderItem;

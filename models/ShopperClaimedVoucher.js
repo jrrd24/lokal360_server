@@ -19,15 +19,6 @@ const ShopperClaimedVoucher = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    start_date: {
-      type: DataTypes.DATEONLY,
-      allowNull: false,
-    },
-    date_claimed: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),
-    },
     is_used: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -36,7 +27,8 @@ const ShopperClaimedVoucher = sequelize.define(
   {
     tableName: "shopper_claimed_voucher",
     modelName: "ShopperClaimedVoucher",
-    timestamps: false,
+    timestamps: true,
+    paranoid: true,
   }
 );
 

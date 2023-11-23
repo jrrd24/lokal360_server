@@ -11,4 +11,12 @@ router.post("/create", verifyJWT.validateToken, controller.createVoucher);
 router.patch("/update", verifyJWT.validateToken, controller.updateVoucher);
 router.delete("/delete", verifyJWT.validateToken, controller.deleteVoucher);
 router.patch("/restore", verifyJWT.validateToken, controller.restoreVoucher);
+//SHOPPER SIDE
+router.post("/claim", verifyJWT.validateToken, controller.claimVoucher);
+router.patch(
+  "/use_claimed",
+  verifyJWT.validateToken,
+  controller.useClaimedVoucher
+);
+
 module.exports = router;

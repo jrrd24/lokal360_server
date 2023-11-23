@@ -4,8 +4,9 @@ const Product = require("../models/Product");
 const ProductImage = require("../models/ProductImage");
 const Promo = require("../models/Promo");
 const PromoType = require("../models/PromoType");
-const { Op } = require("sequelize");
 const Shop = require("../models/Shop");
+const ShopperClaimedVoucher = require("../models/ShopperClaimedVoucher");
+const { Op } = require("sequelize");
 
 module.exports = {
   getAllShopVoucher: async (req, res) => {
@@ -361,6 +362,45 @@ module.exports = {
     } catch (error) {
       console.error("Get All Shop Promos Error", error);
       res.sendStatus(500);
+    }
+  },
+
+  //SHOPPER SIDE
+  claimVoucher: async (req, res) => {
+    const { shopperID, voucherID } = req.query;
+
+    try {
+      const [claimedVoucher, created] =
+        await ShopperClaimedVoucher.findOrCreate({
+          where: { shopperID: shopperID, voucherID: voucherID, is_used: false },
+        });
+
+      if (created) {
+        res.status(200).json({ message: "Voucher Claimed Successfully" });
+      }
+    } catch (error) {
+      console.error("Claim Voucher Error", error);
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Unable to Claim Voucher" });
+    }
+  },
+
+  useClaimedVoucher: async (req, res) => {
+    const { shopperClaimedVoucherID } = req.query;
+
+    try {
+      await ShopperClaimedVoucher.update(
+        { is_used: true },
+        { where: { shopperClaimedVoucherID: shopperClaimedVoucherID } }
+      );
+
+      res.sendStatus(200);
+    } catch (error) {
+      console.error("Use Claimed Voucher Error", error);
+      res.status(500).json({
+        error: "Internal Server Error: Cannot shopUse Claimed Voucher",
+      });
     }
   },
 };

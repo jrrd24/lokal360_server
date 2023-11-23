@@ -32,23 +32,21 @@ const Order = sequelize.define(
       type: DataTypes.STRING(10),
       allowNull: false,
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),
-    },
+    // createdAt: {
+    //   type: DataTypes.DATE,
+    //   allowNull: false,
+    //   defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),
+    // },
     approved_at: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),
+      allowNull: true,
     },
     completed_at: {
       type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),
+      allowNull: true,
     },
     total_price: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
   },
@@ -56,8 +54,7 @@ const Order = sequelize.define(
     tableName: "order",
     modelName: "Order",
     timestamps: true,
-    createdAt: "createdAt",
-    updatedAt: false,
+    paranoid: true,
   }
 );
 
