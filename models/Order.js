@@ -45,9 +45,10 @@ const Order = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
-    total_price: {
+    shipping_fee: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
+      defaultValue: 0.0,
     },
   },
   {

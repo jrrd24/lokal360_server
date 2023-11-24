@@ -28,5 +28,16 @@ router.get(
   verifyJWT.validateToken,
   controller.getAllShopOrders
 );
+router.get(
+  "/get_shop_order_details",
+  verifyJWT.validateToken,
+  controller.getShopOrderDetails
+);
+router.patch(
+  "/update_status",
+  verifyJWT.validateToken,
+  controller.updateOrderStatus
+);
+router.get("/get_status", controller.getShopOrderCount);
 
 module.exports = router;

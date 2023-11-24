@@ -33,15 +33,17 @@ const credentials = {
 };
 
 //Sync Database with models
-const db = require(`./models`);
-sequelize
-  .sync({ force: false })
-  .then(() => {
-    console.log("Database tables synced.");
-  })
-  .catch((error) => {
-    console.error("Error syncing database:", error);
-  });
+// (COMMENTED OUT TO AVOID ALTER TABLES)
+
+// const db = require(`./models`);
+// sequelize
+//   .sync({ force: false })
+//   .then(() => {
+//     console.log("Database tables synced.");
+//   })
+//   .catch((error) => {
+//     console.error("Error syncing database:", error);
+//   });
 
 // enable CORS
 app.use(

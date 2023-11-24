@@ -49,8 +49,10 @@ module.exports = {
           "promoTypeID",
           "discount_amount",
           "min_spend",
+          "createdAt",
         ],
         include: [{ model: PromoType, attributes: ["promo_type_name"] }],
+        order: [["createdAt", "DESC"]],
       });
 
       const shopPromoData = allShopPromo.map((promo) => ({

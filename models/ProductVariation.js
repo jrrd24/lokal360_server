@@ -19,7 +19,7 @@ const ProductVariation = sequelize.define(
       allowNull: false,
     },
     price: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
     },
     var_image: {

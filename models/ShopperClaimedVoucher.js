@@ -43,4 +43,16 @@ Voucher.belongsToMany(Shopper, {
   onDelete: "CASCADE",
 });
 
+Voucher.belongsTo(ShopperClaimedVoucher, {
+  foreignKey: "voucherID",
+  onDelete: "CASCADE",
+});
+ShopperClaimedVoucher.hasOne(Voucher, { foreignKey: "voucherID" });
+
+Shopper.belongsTo(ShopperClaimedVoucher, {
+  foreignKey: "shopperID",
+  onDelete: "CASCADE",
+});
+ShopperClaimedVoucher.hasOne(Shopper, { foreignKey: "shopperID" });
+
 module.exports = ShopperClaimedVoucher;
