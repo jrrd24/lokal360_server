@@ -7,7 +7,7 @@ const sequelize = require("../config/sequelize");
 
 module.exports = {
   getAllShopCategory: async (req, res) => {
-    const { shopID } = req.query;
+    const { shopID, limit } = req.query;
     try {
       const allShopCategory = await ShopCategory.findAll({
         where: { shopID: shopID },
@@ -50,6 +50,9 @@ module.exports = {
           ],
         ],
         group: ["ShopCategory.shopCategoryID"],
+        order: [["total_sold", "DESC"]],
+        limit: parseInt(limit) || null,
+        subQuery: false,
       });
 
       if (allShopCategory.length > 0) {

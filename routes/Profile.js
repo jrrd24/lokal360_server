@@ -4,5 +4,6 @@ const controller = require("../controllers/ProfileController");
 const verifyJWT = require("../middlewares/ValidateJWT");
 
 router.get("/", controller.getProfile);
-router.patch("/update", verifyJWT.validateToken, controller.updateProfile),
-  (module.exports = router);
+router.get("/dashboard", controller.getUsername);
+router.patch("/update", verifyJWT.validateToken, controller.updateProfile);
+module.exports = router;

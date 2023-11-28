@@ -19,18 +19,13 @@ const ShopperFollowShop = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    followed_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
   },
   {
     tableName: "shopper_follow_shop",
     modelName: "ShopperFollowProduct",
     timestamps: true,
-    createdAt: "followed_at",
     updatedAt: false,
+    paranoid: true,
   }
 );
 
@@ -44,5 +39,11 @@ Shop.belongsToMany(Shopper, {
   foreignKey: "shopID",
   onDelete: "CASCADE",
 });
+
+Shopper.belongsTo(ShopperFollowShop, {
+  foreignKey: "shopperID",
+  onDelete: "CASCADE",
+});
+ShopperFollowShop.hasMany(Shopper, { foreignKey: "shopperID" });
 
 module.exports = ShopperFollowShop;

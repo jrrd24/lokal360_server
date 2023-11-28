@@ -32,6 +32,7 @@ module.exports = {
             attributes: ["prod_image"],
           },
         ],
+        order: [["createdAt", "DESC"]],
       });
 
       //GET STATUS COUNT

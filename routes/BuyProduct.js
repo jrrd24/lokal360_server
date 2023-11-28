@@ -38,6 +38,10 @@ router.patch(
   verifyJWT.validateToken,
   controller.updateOrderStatus
 );
-router.get("/get_status", controller.getShopOrderCount);
+router.get(
+  "/get_status",
+  verifyJWT.validateToken,
+  controller.getShopOrderCount
+);
 
 module.exports = router;

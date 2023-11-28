@@ -148,4 +148,24 @@ module.exports = {
       }
     });
   },
+
+  //get name only
+  getUsername: async (req, res) => {
+    const { userID } = req.query;
+
+    try {
+      const name = await User.findOne({
+        where: { userID: userID },
+        attributes: ["first_name", "last_name"],
+        include: [{ model: Shopper, attributes: ["username"] }],
+      });
+
+      res.status(200).json(name);
+    } catch (error) {
+      console.error("Cannot Get User Name:", error);
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Cannot Get User Info" });
+    }
+  },
 };
