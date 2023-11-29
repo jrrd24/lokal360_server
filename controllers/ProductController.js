@@ -183,23 +183,6 @@ module.exports = {
     }
   },
 
-  // get product count
-  productCount: async (req, res) => {
-    const { shopID } = req.query;
-    try {
-      const prodCount = await Product.findAll({
-        where: { shopID: shopID },
-        attributes: [
-          [sequelize.fn("COUNT", sequelize.col("productID")), "noOfProducts"],
-        ],
-      });
-      res.json(prodCount);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  },
-
   createProduct: async (req, res) => {
     const { shopID } = req.query;
 
@@ -763,6 +746,25 @@ module.exports = {
       res
         .status(500)
         .json({ error: "Internal Server Error: Cannot Restore Variation" });
+    }
+  },
+
+  //Search Product
+  searchProductShopMgmt: async (req, res) => {
+    const { shopID, query } = req.query;
+
+    try {
+      const result = await Product.findAndCountAll({
+        where: { shopID: shopID, product_name: { [Op.like]: `%${query}%` } },
+        include: [{ model: ProductImage, attributes: ["prod_image"] }],
+      });
+
+      res.status(200).json(result);
+    } catch (error) {
+      console.error("Search Product Shop Mgmt: ", error);
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Cannot Return Search Result" });
     }
   },
 };

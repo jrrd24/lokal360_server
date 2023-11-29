@@ -6,7 +6,7 @@ const Shopper = require("../models/Shopper");
 const Shop = require("../models/Shop");
 const Order = require("../models/Order");
 const OrderItem = require("../models/OrderItem");
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const User = require("../models/User");
 const DeliveryAddress = require("../models/DeliveryAddress");
 const ShopperClaimedVoucher = require("../models/ShopperClaimedVoucher");
@@ -248,7 +248,6 @@ module.exports = {
           "status",
           "shipping_method",
           "createdAt",
-          // "shipping_fee",
         ],
         include: [
           {
@@ -277,7 +276,12 @@ module.exports = {
             include: [{ model: User, attributes: ["first_name", "last_name"] }],
           },
         ],
-        order: [["createdAt", "DESC"]],
+        order: [
+          Sequelize.literal(
+            `FIELD(order.status, 'Pending Approval', 'Preparing', 'Ready For Pick-Up', 'On Delivery', 'Complete', 'Cancelled', 'For Refund')`
+          ),
+          ["createdAt", "DESC"],
+        ],
       });
 
       const flattenedOrders = shopOrders.map((order) => {
@@ -325,18 +329,6 @@ module.exports = {
             first_name: order.Shopper.User.first_name,
             last_name: order.Shopper.User.last_name,
           },
-          // AppliedVoucher: {
-          //   voucherID: order.ShopperClaimedVoucher.voucherID,
-          //   startDate: order.ShopperClaimedVoucher.Voucher.start_date,
-          //   endDate: order.ShopperClaimedVoucher.Voucher.end_date,
-          //   min_spend: order.ShopperClaimedVoucher.Voucher.Promo.min_spend,
-          //   discount_amount:
-          //     order.ShopperClaimedVoucher.Voucher.Promo.discount_amount,
-          //   promo_type_name:
-          //     order.ShopperClaimedVoucher.Voucher.Promo.PromoType
-          //       .promo_type_name,
-          // },
-          // sum_order_price: orderTotalPrice,
         };
       });
 

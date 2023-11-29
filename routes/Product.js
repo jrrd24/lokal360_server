@@ -5,7 +5,6 @@ const verifyJWT = require("../middlewares/ValidateJWT");
 
 router.get("/", controller.getAllShopProduct);
 router.get("/product_info", controller.getProduct);
-router.get("/products_count", controller.productCount);
 router.post("/create", verifyJWT.validateToken, controller.createProduct);
 router.patch("/update", verifyJWT.validateToken, controller.updateProduct);
 router.delete("/delete", verifyJWT.validateToken, controller.deleteProduct);
@@ -42,4 +41,6 @@ router.patch(
   verifyJWT.validateToken,
   controller.restoreVariation
 );
+//For Search
+router.get("/shop_mgmt/search", controller.searchProductShopMgmt);
 module.exports = router;

@@ -7,13 +7,22 @@ const destinationFolderDB = "shop/logoAndHeader";
 const configureMulter = require("../helpers/MulterConfig");
 const upload = configureMulter(destinationFolder);
 const fs = require("fs");
+const ShopperFollowShop = require("../models/ShopperFollowShop");
+const Product = require("../models/Product");
+const Order = require("../models/Order");
+const OrderItem = require("../models/OrderItem");
+const ProductVariation = require("../models/ProductVariation");
+const ShopperClaimedVoucher = require("../models/ShopperClaimedVoucher");
+const Voucher = require("../models/Voucher");
+const Promo = require("../models/Promo");
+const PromoType = require("../models/PromoType");
 
 module.exports = {
   //get shop info
   getShopInfo: async (req, res) => {
     const { shopID } = req.query;
     try {
-      const result = await Shop.findOne({
+      const shopInfo = await Shop.findOne({
         where: { shopID: shopID },
         include: [
           {
@@ -26,7 +35,103 @@ module.exports = {
         ],
       });
 
-      res.json(result);
+      const followerCount = await ShopperFollowShop.count({
+        where: { shopID: shopInfo.shopID },
+      });
+
+      const productCount = await Product.count({
+        where: { shopID: shopInfo.shopID },
+      });
+
+      const shopOrders = await Order.findAll({
+        attributes: ["orderID", "shipping_fee"],
+        where: { status: "Complete" },
+        include: [
+          {
+            model: OrderItem,
+            attributes: ["quantity", "prodVariationID"],
+            include: [
+              {
+                model: ProductVariation,
+                attributes: ["price"],
+                include: [
+                  {
+                    model: Product,
+                    attributes: ["shopID"],
+                    where: { shopID: shopID },
+                    required: true,
+                  },
+                ],
+                required: true,
+              },
+            ],
+            required: true,
+          },
+          {
+            model: ShopperClaimedVoucher,
+            attributes: ["shopperID"],
+            include: [
+              {
+                model: Voucher,
+                attributes: ["voucherID"],
+                include: [
+                  {
+                    model: Promo,
+                    attributes: ["discount_amount"],
+                    include: [
+                      {
+                        model: PromoType,
+                        attributes: ["promo_type_name"],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+
+      const allOrderAmountDue = shopOrders.map((order) => {
+        // Calculate total price for each order
+        const orderTotalPrice = order.OrderItems.reduce(
+          (total, orderItem) =>
+            total +
+            parseInt(orderItem.quantity) *
+              parseFloat(orderItem.ProductVariation.price),
+          0
+        );
+
+        const orderItemsWithShipping =
+          orderTotalPrice + parseFloat(order.shipping_fee);
+
+        const discountAmount = parseFloat(
+          order.ShopperClaimedVoucher.Voucher.Promo.discount_amount
+        );
+        const discountType =
+          order.ShopperClaimedVoucher.Voucher.Promo.PromoType.promo_type_name;
+
+        const totalWithDiscount =
+          discountType === "Percent Discount"
+            ? orderItemsWithShipping - orderItemsWithShipping * discountAmount
+            : orderItemsWithShipping - discountAmount;
+        return {
+          amountDue: parseFloat(totalWithDiscount).toFixed(2),
+        };
+      });
+
+      const totalSales = parseFloat(
+        allOrderAmountDue.reduce((total, order) => {
+          return total + parseFloat(order.amountDue);
+        }, 0)
+      ).toFixed(2);
+
+      res.status(200).json({
+        shopInfo,
+        followerCount,
+        productCount,
+        totalSales,
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Internal server error" });
