@@ -24,6 +24,7 @@ const adRoute = require("./routes/Ad");
 const employeeRoute = require("./routes/Employee");
 const buyProductRoute = require("./routes/BuyProduct");
 const customerRoute = require("./routes/Customer");
+const registerShopRoute = require("./routes/RegisterShop");
 //initalize functions
 const app = express();
 const port = 8800;
@@ -87,6 +88,7 @@ app.use("/api/ad", adRoute);
 app.use("/api/employee", employeeRoute);
 app.use("/api/buy_product", buyProductRoute);
 app.use("/api/customer", customerRoute);
+app.use("/api/register_shop", registerShopRoute);
 app.use(verifyJWT.validateToken);
 app.use("/api/home", homeRoute);
 app.use("/api/profile", profileRoute);

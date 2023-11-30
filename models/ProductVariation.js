@@ -25,11 +25,6 @@ const ProductVariation = sequelize.define(
     var_image: {
       type: DataTypes.STRING(255),
     },
-    amt_sold: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0,
-    },
     amt_on_hand: {
       type: DataTypes.INTEGER,
       allowNull: false,

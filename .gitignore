@@ -15,3 +15,5 @@ uploads/shop/ads/*
 !uploads/shop/ads/.gitignore
 uploads/user/profilePic/*
 !uploads/user/profilePic/.gitignore
+uploads/shop/documents/*
+!uploads/shop/documents/.gitignore

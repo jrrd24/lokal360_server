@@ -43,4 +43,5 @@ router.patch(
 );
 //For Search
 router.get("/shop_mgmt/search", controller.searchProductShopMgmt);
+
 module.exports = router;

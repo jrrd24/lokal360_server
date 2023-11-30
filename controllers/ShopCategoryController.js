@@ -4,17 +4,20 @@ const ProductVariation = require("../models/ProductVariation");
 const ProductImage = require("../models/ProductImage");
 const ShopCategory = require("../models/ShopCategory");
 const sequelize = require("../config/sequelize");
+const Order = require("../models/Order");
+const OrderItem = require("../models/OrderItem");
 
 module.exports = {
   getAllShopCategory: async (req, res) => {
     const { shopID, limit } = req.query;
+
     try {
       const allShopCategory = await ShopCategory.findAll({
         where: { shopID: shopID },
         include: [
           {
             model: Product,
-            attributes: [],
+            attributes: ["productID"],
             where: { shopID: shopID },
             required: false,
             include: [
@@ -30,33 +33,57 @@ module.exports = {
           "shopCategoryID",
           "shopID",
           "shop_category_name",
-          [
-            sequelize.fn(
-              "COUNT",
-              sequelize.fn("DISTINCT", sequelize.col("Products.productID"))
-            ),
-            "number_of_products",
-          ],
-          [
-            sequelize.cast(
-              sequelize.fn(
-                "SUM",
-                sequelize.col("Products.ProductVariations.amt_sold")
-              ),
-              "unsigned"
-            ),
-
-            "total_sold",
-          ],
+          "createdAt",
         ],
-        group: ["ShopCategory.shopCategoryID"],
-        order: [["total_sold", "DESC"]],
+        group: ["ShopCategory.shopCategoryID", "Products.productID"],
+        order: [["createdAt", "DESC"]],
         limit: parseInt(limit) || null,
         subQuery: false,
       });
 
+      const allShopCategoryData = await Promise.all(
+        allShopCategory.map(async (category) => {
+          // Number of Orders Count
+          const prodOrdersCount = await Order.count({
+            attributes: ["orderID"],
+            where: { status: "Complete" },
+            include: [
+              {
+                model: OrderItem,
+                attributes: ["orderItemID"],
+                include: [
+                  {
+                    model: ProductVariation,
+                    attributes: ["productID"],
+                    where: {
+                      productID: category.Products.map((p) => p.productID),
+                    },
+                    required: true,
+                  },
+                ],
+                required: true,
+              },
+            ],
+            group: ["Order.orderID"],
+          });
+
+          const totalCount = prodOrdersCount.reduce(
+            (total, order) => total + order.count,
+            0
+          );
+
+          const productCount = category.Products.length;
+
+          return {
+            ...category.toJSON(),
+            total_sold: totalCount || 0,
+            number_of_products: productCount,
+          };
+        })
+      );
+
       if (allShopCategory.length > 0) {
-        res.status(200).json(allShopCategory);
+        res.status(200).json(allShopCategoryData);
       } else {
         res.status(404).json({ error: "No Shop Categories Found" });
       }

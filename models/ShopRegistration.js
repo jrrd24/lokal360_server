@@ -1,7 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
-const ShopOwner = require("./ShopOwner");
+
 const Category = require("./Category");
+const User = require("./User");
 
 const ShopRegistration = sequelize.define(
   "ShopRegistration",
@@ -11,7 +12,7 @@ const ShopRegistration = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
-    shopOwnerID: {
+    userID: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
@@ -39,7 +40,11 @@ const ShopRegistration = sequelize.define(
       type: DataTypes.STRING(255),
       allowNull: false,
     },
-    attachment_valid_id: {
+    attachment_valid_id_front: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+    },
+    attachment_valid_id_back: {
       type: DataTypes.STRING(255),
       allowNull: false,
     },
@@ -53,6 +58,15 @@ const ShopRegistration = sequelize.define(
     },
     message: {
       type: DataTypes.STRING(500),
+    },
+    contact_email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    contact_number: {
+      type: DataTypes.STRING(17),
+      allowNull: false,
     },
     createdAt: {
       type: DataTypes.DATE,
@@ -69,14 +83,15 @@ const ShopRegistration = sequelize.define(
     timestamps: true,
     createdAt: "createdAt",
     updatedAt: false,
+    paranoid: true,
   }
 );
 
-ShopRegistration.belongsTo(ShopOwner, {
-  foreignKey: "shopOwnerID",
+ShopRegistration.belongsTo(User, {
+  foreignKey: "userID",
   onDelete: "CASCADE",
 });
-ShopOwner.hasMany(ShopRegistration, { foreignKey: "shopOwnerID" });
+User.hasMany(ShopRegistration, { foreignKey: "userID" });
 
 ShopRegistration.belongsTo(Category, {
   foreignKey: "categoryID",

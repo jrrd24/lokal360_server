@@ -18,6 +18,9 @@ const { Op } = require("sequelize");
 const Promo = require("../models/Promo");
 const PromoType = require("../models/PromoType");
 const Voucher = require("../models/Voucher");
+const Order = require("../models/Order");
+const OrderItem = require("../models/OrderItem");
+const ShopperClaimedVoucher = require("../models/ShopperClaimedVoucher");
 
 module.exports = {
   // get data of all products of shop
@@ -57,16 +60,37 @@ module.exports = {
             prodStatus = "In Stock";
           }
 
-          //GET TOTAL SOLD FROM VAR
-          const varTotalSold = await ProductVariation.sum("amt_sold", {
-            where: { productID: product.productID },
+          //AMOUNT SOLD
+          const prodOrdersCount = await Order.count({
+            attributes: ["orderID"],
+            where: { status: "Complete" },
+            include: [
+              {
+                model: OrderItem,
+                attributes: ["orderItemID"],
+                include: [
+                  {
+                    model: ProductVariation,
+                    attributes: ["productID"],
+                    where: { productID: product.productID },
+                    required: true,
+                  },
+                ],
+                required: true,
+              },
+            ],
+            group: ["Order.orderID"],
           });
 
+          const totalCount = prodOrdersCount.reduce(
+            (total, order) => total + order.count,
+            0
+          );
           // Add status property to the product object
           return {
             ...product.toJSON(),
             status: prodStatus,
-            total_sold: varTotalSold || 0,
+            total_sold: totalCount || 0,
           };
         })
       );
@@ -162,16 +186,88 @@ module.exports = {
           where: { productID: productID },
         });
 
-        //GET TOTAL SOLD FROM VAR
-        const varTotalSold = await ProductVariation.sum("amt_sold", {
-          where: { productID: productID },
+        const prodOrdersCount = await Order.findAndCountAll({
+          attributes: ["shipping_fee"],
+          where: { status: "Complete" },
+          include: [
+            {
+              model: OrderItem,
+              attributes: ["quantity"],
+              include: [
+                {
+                  model: ProductVariation,
+                  attributes: ["price", "productID"],
+                  where: { productID: productID },
+                  required: true,
+                },
+              ],
+              required: true,
+            },
+            {
+              model: ShopperClaimedVoucher,
+              attributes: ["shopperID"],
+              include: [
+                {
+                  model: Voucher,
+                  attributes: ["voucherID"],
+                  include: [
+                    {
+                      model: Promo,
+                      attributes: ["discount_amount"],
+                      include: [
+                        {
+                          model: PromoType,
+                          attributes: ["promo_type_name"],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         });
 
+        const allOrderAmountDue = prodOrdersCount.rows.map((order) => {
+          const orderTotalPrice = order.OrderItems.reduce(
+            (total, orderItem) =>
+              total +
+              parseInt(orderItem.quantity) *
+                parseFloat(orderItem.ProductVariation.price),
+            0
+          );
+
+          const orderItemsWithShipping =
+            orderTotalPrice + parseFloat(order.shipping_fee);
+
+          const discountAmount = parseFloat(
+            order.ShopperClaimedVoucher.Voucher.Promo.discount_amount
+          );
+          const discountType =
+            order.ShopperClaimedVoucher.Voucher.Promo.PromoType.promo_type_name;
+
+          const totalWithDiscount =
+            discountType === "Percent Discount"
+              ? orderItemsWithShipping - orderItemsWithShipping * discountAmount
+              : orderItemsWithShipping - discountAmount;
+
+          return {
+            totalSales: parseFloat(totalWithDiscount).toFixed(2),
+          };
+        });
+
+        const totalSales = parseFloat(
+          allOrderAmountDue.reduce((total, order) => {
+            return total + parseFloat(order.totalSales);
+          }, 0)
+        ).toFixed(2);
+
         //GET TOTAL SALES
-        product.dataValues.total_sold = varTotalSold;
         product.dataValues.price = minVarPrice;
         product.dataValues.prod_status = prodStatus;
         product.dataValues.number_of_variations = variationCount;
+        product.dataValues.total_sales = totalSales;
+        product.dataValues.amountSold = prodOrdersCount.count;
 
         res.status(200).json(product);
       } else {
@@ -412,17 +508,38 @@ module.exports = {
             where: { productID: product.productID },
           });
 
-          //GET TOTAL SOLD FROM VAR
-          const varTotalSold = await ProductVariation.sum("amt_sold", {
-            where: { productID: product.productID },
+          //AMOUNT SOLD
+          const prodOrdersCount = await Order.count({
+            attributes: ["orderID"],
+            where: { status: "Complete" },
+            include: [
+              {
+                model: OrderItem,
+                attributes: ["orderItemID"],
+                include: [
+                  {
+                    model: ProductVariation,
+                    attributes: ["productID"],
+                    where: { productID: product.productID },
+                    required: true,
+                  },
+                ],
+                required: true,
+              },
+            ],
+            group: ["Order.orderID"],
           });
 
-          // TODO: EDIT THIS TO ALSO INCLUDE DISCOUNTED PRICE
+          const totalCount = prodOrdersCount.reduce(
+            (total, order) => total + order.count,
+            0
+          );
+
           return {
             ...product.toJSON(),
             price: minVarPrice,
             orig_price: minVarPrice,
-            total_sold: varTotalSold,
+            total_sold: totalCount || 0,
           };
         })
       );
@@ -463,14 +580,6 @@ module.exports = {
     try {
       const topProductsData = await Product.findAll({
         limit: 5,
-        order: [
-          [
-            sequelize.literal(
-              "(SELECT SUM(`ProductVariations`.`amt_sold`) FROM `product_variation` AS `ProductVariations` WHERE `ProductVariations`.`productID` = `Product`.`productID`)"
-            ),
-            "DESC",
-          ],
-        ],
         where: { shopID: shopID },
         include: [
           {
@@ -482,20 +591,47 @@ module.exports = {
 
       const topProducts = await Promise.all(
         topProductsData.map(async (product) => {
-          //GET TOTAL SOLD FROM VAR
-          const varTotalSold = await ProductVariation.sum("amt_sold", {
-            where: { productID: product.productID },
+          //AMOUNT SOLD
+          const prodOrdersCount = await Order.count({
+            attributes: ["orderID"],
+            where: { status: "Complete" },
+            include: [
+              {
+                model: OrderItem,
+                attributes: ["orderItemID"],
+                include: [
+                  {
+                    model: ProductVariation,
+                    attributes: ["productID"],
+                    where: { productID: product.productID },
+                    required: true,
+                  },
+                ],
+                required: true,
+              },
+            ],
+            group: ["Order.orderID"],
           });
+
+          const totalCount = prodOrdersCount.reduce(
+            (total, order) => total + order.count,
+            0
+          );
 
           // Add status property to the product object
           return {
             ...product.toJSON(),
-            total_sold: varTotalSold || 0,
+            total_sold: totalCount || 0,
           };
         })
       );
 
-      res.status(200).json({ topProducts });
+      // Order topProducts by total_sold in descending order
+      const sortedTopProducts = topProducts.sort(
+        (a, b) => b.total_sold - a.total_sold
+      );
+
+      res.status(200).json({ topProducts: sortedTopProducts });
     } catch (error) {
       res
         .status(500)
