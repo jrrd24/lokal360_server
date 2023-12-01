@@ -137,6 +137,7 @@ const Shop = sequelize.define(
     tableName: "shop",
     modelName: "Shop",
     timestamps: true,
+    paranoid: true,
   }
 );
 

@@ -5,6 +5,8 @@ const path = require("path");
 const destinationFolder = "uploads/shop/documents";
 const destinationFolderDB = "shop/product";
 const fs = require("fs");
+const Shop = require("../models/Shop");
+const ShopOwner = require("../models/ShopOwner");
 
 module.exports = {
   getOwnerInfo: async (req, res) => {
@@ -144,6 +146,102 @@ module.exports = {
       console.error("Create Shop Registration Error:", error);
       res.status(500).json({
         error: "Internal Server Error: Shop Registration Sumbission Failed",
+      });
+    }
+  },
+
+  displayAllShopRegistration: async (req, res) => {
+    try {
+      const allShopRegistration = await ShopRegistration.findAll({
+        include: {
+          model: User,
+          attributes: ["first_name", "last_name", "profile_pic"],
+        },
+      });
+
+      res.status(200).json(allShopRegistration);
+    } catch (error) {
+      console.error("Display All Shop Registrations Error:", error);
+      res.status(500).json({
+        error: "Internal Server Error: Cannot Display All Shop Registrations ",
+      });
+    }
+  },
+
+  displayShopRegistrationDetails: async (req, res) => {
+    const { shopRegistrationID } = req.query;
+
+    try {
+      const registrationDetails = await ShopRegistration.findOne({
+        where: {
+          shopRegistrationID: shopRegistrationID,
+        },
+        include: {
+          model: User,
+          attributes: ["first_name", "last_name", "profile_pic"],
+        },
+      });
+
+      res.status(200).json(registrationDetails);
+    } catch (error) {
+      console.error("Display Shop Registration Details Error:", error);
+      res.status(500).json({
+        error:
+          "Internal Server Error: Cannot Display Shop Registration Details",
+      });
+    }
+  },
+
+  reviewRegistration: async (req, res) => {
+    const { shopRegistrationID } = req.query;
+
+    try {
+      const updateReg = await ShopRegistration.update(
+        {
+          status: req.body.status,
+          message: req.body.message,
+          resolution_at: new Date(),
+        },
+        { where: { shopRegistrationID: shopRegistrationID } }
+      );
+
+      if (req.body.status === "Approved" && updateReg) {
+        const registrationDetails = await ShopRegistration.findOne({
+          where: {
+            shopRegistrationID: shopRegistrationID,
+          },
+        });
+        const shopOwner = await ShopOwner.create({
+          userID: registrationDetails.userID,
+        });
+
+        if (shopOwner.shopOwnerID) {
+          await User.update(
+            { is_shop_owner: true },
+            { where: { userID: shopOwner.userID } }
+          );
+
+          const shopCreationResult = await Shop.create({
+            shopOwnerID: shopOwner.shopOwnerID,
+            shop_name: registrationDetails.shop_name,
+            type: registrationDetails.shop_type,
+            categoryID: registrationDetails.categoryID,
+          });
+          if (shopCreationResult) {
+            res.status(200).json({ shopOwner, shopCreationResult });
+          } else {
+            res.status(500).json({ error: "Shop Creation Failed" });
+          }
+        } else {
+          res.status(500).json({ error: "Shop Owner Creation Failed" });
+        }
+      } else {
+        res.status(200).json({ message: "Shop Approval Rejected" });
+      }
+    } catch (error) {
+      console.error("Review Shop Registration Error:", error);
+      res.status(500).json({
+        error: "Internal Server Error: Cannot Review Shop Registration ",
       });
     }
   },

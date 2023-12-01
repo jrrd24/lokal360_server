@@ -68,11 +68,6 @@ const ShopRegistration = sequelize.define(
       type: DataTypes.STRING(17),
       allowNull: false,
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),
-    },
     resolution_at: {
       type: DataTypes.DATE,
     },
@@ -81,7 +76,6 @@ const ShopRegistration = sequelize.define(
     tableName: "shop_registration",
     modelName: "ShopRegistration",
     timestamps: true,
-    createdAt: "createdAt",
     updatedAt: false,
     paranoid: true,
   }
