@@ -5,6 +5,9 @@ const destinationFolderDB = "shop/ads";
 const configureMulter = require("../helpers/MulterConfig");
 const upload = configureMulter(destinationFolder);
 const fs = require("fs");
+const { Op } = require("sequelize");
+const Shop = require("../models/Shop");
+const today = new Date();
 
 module.exports = {
   getAllShopAd: async (req, res) => {
@@ -276,5 +279,63 @@ module.exports = {
     }
   },
 
-  //TODO: CREATE APPROVE AD API
+  //AD APPROVAL
+  getPendingSitewideAds: async (req, res) => {
+    try {
+      const allSitewideAds = await LokalAds.findAll({
+        where: {
+          type: 2,
+          status: "Pending Approval",
+          start_date: {
+            [Op.gte]: today,
+          },
+        },
+        attributes: [
+          "lokalAdsID",
+          "shopID",
+          "ad_name",
+          "ad_image",
+          "start_date",
+          "end_date",
+          "type",
+          "status",
+          "message",
+        ],
+        include: [{ model: Shop, attributes: ["shop_name"] }],
+      });
+      res.status(200).json(allSitewideAds);
+    } catch (error) {
+      console.error("Get All Sitewide Ads", error);
+      res.status(500).json({
+        error: "Internal server error: Cannot Retrieve All Sitewide Ads",
+      });
+    }
+  },
+
+  reviewAdApproval: async (req, res) => {
+    const { lokalAdsID } = req.query;
+    let currentDate = null;
+
+    if (req.body.status === "Approved") {
+      currentDate = new Date();
+    }
+
+    try {
+      const updateAdStatus = await LokalAds.update(
+        {
+          status: req.body.status,
+          message: req.body.message,
+          approved_at: currentDate,
+        },
+        { where: { lokalAdsID: lokalAdsID } }
+      );
+
+      res.status(200).json(updateAdStatus);
+    } catch (error) {
+      console.error("Review Ad Approval Error", error);
+      res.status(500).json({
+        error: "Internal server error: Cannot Review Ad Approval",
+      });
+    }
+  },
 };

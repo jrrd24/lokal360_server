@@ -2,6 +2,7 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/sequelize");
 const Shopper = require("./Shopper");
 const Product = require("./Product");
+const ProductVariation = require("./ProductVariation");
 
 const Review = sequelize.define(
   "Review",
@@ -15,7 +16,7 @@ const Review = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    productVariationID: {
+    prodVariationID: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
@@ -35,13 +36,17 @@ const Review = sequelize.define(
     modelName: "Review",
     timestamps: true,
     updatedAt: false,
+    paranoid: true,
   }
 );
 
 Review.belongsTo(Shopper, { foreignKey: "shopperID", onDelete: "CASCADE" });
 Shopper.hasMany(Review, { foreignKey: "shopperID" });
 
-Review.belongsTo(Product, { foreignKey: "productID", onDelete: "CASCADE" });
-Product.hasMany(Review, { foreignKey: "productID" });
+Review.belongsTo(ProductVariation, {
+  foreignKey: "prodVariationID",
+  onDelete: "CASCADE",
+});
+ProductVariation.hasMany(Review, { foreignKey: "prodVariationID" });
 
 module.exports = Review;

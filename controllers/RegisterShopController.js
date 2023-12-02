@@ -153,13 +153,22 @@ module.exports = {
   displayAllShopRegistration: async (req, res) => {
     try {
       const allShopRegistration = await ShopRegistration.findAll({
+        attributes: ["shopRegistrationID", "status"],
         include: {
           model: User,
           attributes: ["first_name", "last_name", "profile_pic"],
         },
       });
 
-      res.status(200).json(allShopRegistration);
+      const flattenedData = allShopRegistration.map((registration) => ({
+        shopRegistrationID: registration.shopRegistrationID,
+        status: registration.status,
+        first_name: registration.User.first_name,
+        last_name: registration.User.last_name,
+        profile_pic: registration.User.profile_pic,
+      }));
+
+      res.status(200).json(flattenedData);
     } catch (error) {
       console.error("Display All Shop Registrations Error:", error);
       res.status(500).json({

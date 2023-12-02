@@ -25,6 +25,8 @@ const employeeRoute = require("./routes/Employee");
 const buyProductRoute = require("./routes/BuyProduct");
 const customerRoute = require("./routes/Customer");
 const registerShopRoute = require("./routes/RegisterShop");
+const productReviewRoute = require("./routes/ProductReview");
+const shopperSideGetRoute = require("./routes/ShopperSideGet");
 //initalize functions
 const app = express();
 const port = 8800;
@@ -48,9 +50,14 @@ const credentials = {
 //   });
 
 // enable CORS
+//00 - shop mgmt, 01 - shopper, 02 - admin
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+    ],
     credentials: true,
   })
 );
@@ -89,6 +96,8 @@ app.use("/api/employee", employeeRoute);
 app.use("/api/buy_product", buyProductRoute);
 app.use("/api/customer", customerRoute);
 app.use("/api/register_shop", registerShopRoute);
+app.use("/api/review", productReviewRoute);
+app.use("/api/shopper_get", shopperSideGetRoute);
 app.use(verifyJWT.validateToken);
 app.use("/api/home", homeRoute);
 app.use("/api/profile", profileRoute);

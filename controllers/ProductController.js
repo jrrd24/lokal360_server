@@ -21,6 +21,7 @@ const Voucher = require("../models/Voucher");
 const Order = require("../models/Order");
 const OrderItem = require("../models/OrderItem");
 const ShopperClaimedVoucher = require("../models/ShopperClaimedVoucher");
+const Review = require("../models/Review");
 
 module.exports = {
   // get data of all products of shop
@@ -488,6 +489,11 @@ module.exports = {
             model: ProductImage,
             attributes: ["prod_image"],
           },
+          {
+            model: ProductVariation,
+            attributes: ["prodVariationID"],
+            include: [{ model: Review, attributes: ["rating"] }],
+          },
         ],
       });
 
@@ -535,17 +541,44 @@ module.exports = {
             0
           );
 
+          //AVERAGE RATING
+          let averageRating = 0;
+
+          if (product.ProductVariations) {
+            const variationsWithReviews = product.ProductVariations.filter(
+              (variation) => variation.Reviews && variation.Reviews.length > 0
+            );
+
+            if (variationsWithReviews.length > 0) {
+              averageRating =
+                variationsWithReviews.reduce((avg, variation) => {
+                  const variationReviews = variation.Reviews || [];
+                  const variationRatings = variationReviews.map(
+                    (review) => review.rating || 0
+                  );
+
+                  // Calculate the average rating for each variation
+                  const variationAverage =
+                    calculateAverageRating(variationRatings);
+
+                  // Accumulate the average ratings for all variations
+                  return avg + variationAverage;
+                }, 0) / variationsWithReviews.length;
+            }
+          }
           return {
             ...product.toJSON(),
             price: minVarPrice,
             orig_price: minVarPrice,
             total_sold: totalCount || 0,
+            rating: averageRating,
           };
         })
       );
 
       res.status(200).json({ allFeatured, allNotFeatured });
     } catch (error) {
+      console.error("Error: Cannot Retrieve Featured Products", error);
       res
         .status(500)
         .json({ error: "Internal Server Error: Cannot Retrieve Products" });
@@ -892,10 +925,86 @@ module.exports = {
     try {
       const result = await Product.findAndCountAll({
         where: { shopID: shopID, product_name: { [Op.like]: `%${query}%` } },
-        include: [{ model: ProductImage, attributes: ["prod_image"] }],
+        include: [
+          { model: ProductImage, attributes: ["prod_image"] },
+          {
+            model: ProductVariation,
+            attributes: ["prodVariationID"],
+            include: [{ model: Review, attributes: ["rating"] }],
+          },
+        ],
       });
 
-      res.status(200).json(result);
+      const allFeatured = await Promise.all(
+        result.rows.map(async (product) => {
+          // GET PRICE
+          const minVarPrice = await ProductVariation.min("price", {
+            where: { productID: product.productID },
+          });
+
+          //AMOUNT SOLD
+          const prodOrdersCount = await Order.count({
+            attributes: ["orderID"],
+            where: { status: "Complete" },
+            include: [
+              {
+                model: OrderItem,
+                attributes: ["orderItemID"],
+                include: [
+                  {
+                    model: ProductVariation,
+                    attributes: ["productID"],
+                    where: { productID: product.productID },
+                    required: true,
+                  },
+                ],
+                required: true,
+              },
+            ],
+            group: ["Order.orderID"],
+          });
+
+          const totalCount = prodOrdersCount.reduce(
+            (total, order) => total + order.count,
+            0
+          );
+
+          //AVERAGE RATING
+          let averageRating = 0;
+
+          if (product.ProductVariations) {
+            const variationsWithReviews = product.ProductVariations.filter(
+              (variation) => variation.Reviews && variation.Reviews.length > 0
+            );
+
+            if (variationsWithReviews.length > 0) {
+              averageRating =
+                variationsWithReviews.reduce((avg, variation) => {
+                  const variationReviews = variation.Reviews || [];
+                  const variationRatings = variationReviews.map(
+                    (review) => review.rating || 0
+                  );
+
+                  // Calculate the average rating for each variation
+                  const variationAverage =
+                    calculateAverageRating(variationRatings);
+
+                  // Accumulate the average ratings for all variations
+                  return avg + variationAverage;
+                }, 0) / variationsWithReviews.length;
+            }
+          }
+          return {
+            ...product.toJSON(),
+            price: minVarPrice,
+            orig_price: minVarPrice,
+            total_sold: totalCount || 0,
+            rating: averageRating,
+          };
+        })
+      );
+
+      res.status(200).json(allFeatured);
     } catch (error) {
       console.error("Search Product Shop Mgmt: ", error);
       res
@@ -903,4 +1012,13 @@ module.exports = {
         .json({ error: "Internal Server Error: Cannot Return Search Result" });
     }
   },
+};
+
+const calculateAverageRating = (ratings) => {
+  const validRatings = ratings.filter((rating) => rating !== null);
+
+  return validRatings.length > 0
+    ? validRatings.reduce((total, rating) => total + rating, 0) /
+        validRatings.length
+    : null;
 };
