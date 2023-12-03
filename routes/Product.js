@@ -43,5 +43,6 @@ router.patch(
 );
 //For Search
 router.get("/shop_mgmt/search", controller.searchProductShopMgmt);
+router.get("/rating", controller.getProductRating);
 
 module.exports = router;

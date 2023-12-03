@@ -316,6 +316,8 @@ module.exports = {
       });
     }
   },
+
+
 };
 
 const calculateAverageRating = (ratings) => {

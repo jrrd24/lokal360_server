@@ -187,6 +187,10 @@ module.exports = {
           where: { productID: productID },
         });
 
+        const maxVarPrice = await ProductVariation.max("price", {
+          where: { productID: productID },
+        });
+
         const prodOrdersCount = await Order.findAndCountAll({
           attributes: ["shipping_fee"],
           where: { status: "Complete" },
@@ -265,6 +269,7 @@ module.exports = {
 
         //GET TOTAL SALES
         product.dataValues.price = minVarPrice;
+        product.dataValues.max_price = maxVarPrice;
         product.dataValues.prod_status = prodStatus;
         product.dataValues.number_of_variations = variationCount;
         product.dataValues.total_sales = totalSales;
@@ -511,6 +516,9 @@ module.exports = {
         allFeaturedData.map(async (product) => {
           // GET PRICE
           const minVarPrice = await ProductVariation.min("price", {
+            where: { productID: product.productID },
+          });
+          const maxVarPrice = await ProductVariation.max("price", {
             where: { productID: product.productID },
           });
 
@@ -1010,6 +1018,62 @@ module.exports = {
       res
         .status(500)
         .json({ error: "Internal Server Error: Cannot Return Search Result" });
+    }
+  },
+
+  getProductRating: async (req, res) => {
+    const { productID, query } = req.query;
+
+    try {
+      const result = await Product.findOne({
+        where: { productID: productID },
+        include: [
+          { model: ProductImage, attributes: ["prod_image"] },
+          {
+            model: ProductVariation,
+            attributes: ["prodVariationID"],
+            include: [{ model: Review, attributes: ["rating"] }],
+          },
+        ],
+      });
+
+      const rating = () => {
+        //AVERAGE RATING
+        let averageRating = 0;
+        if (result.ProductVariations) {
+          const variationsWithReviews = result.ProductVariations.filter(
+            (variation) => variation.Reviews && variation.Reviews.length > 0
+          );
+
+          if (variationsWithReviews.length > 0) {
+            averageRating =
+              variationsWithReviews.reduce((avg, variation) => {
+                const variationReviews = variation.Reviews || [];
+                const variationRatings = variationReviews.map(
+                  (review) => review.rating || 0
+                );
+
+                // Calculate the average rating for each variation
+                const variationAverage =
+                  calculateAverageRating(variationRatings);
+
+                // Accumulate the average ratings for all variations
+                return avg + variationAverage;
+              }, 0) / variationsWithReviews.length;
+          }
+        }
+
+        return {
+          rating: averageRating,
+        };
+      };
+
+      res.status(200).json(rating());
+    } catch (error) {
+      console.error("Get Product Rating: ", error);
+      res
+        .status(500)
+        .json({ error: "Internal Server Error: Cannot Get Product Rating" });
     }
   },
 };
