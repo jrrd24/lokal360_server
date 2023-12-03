@@ -5,6 +5,7 @@ const ShopEmployee = require("../models/ShopEmployee");
 const { createTokens } = require("../helpers/JWT");
 const { verify } = require("jsonwebtoken");
 const { access } = require("fs");
+const Shopper = require("../models/Shopper");
 
 module.exports = {
   // login user
@@ -33,6 +34,19 @@ module.exports = {
         const roles = decoded.roles;
         const accessToken = tokens.accessToken;
         const userID = foundUser.userID;
+
+        //get shopperID
+        let shopperID = null;
+        try {
+          const shopperIDData = await Shopper.findOne({
+            where: { userID: userID },
+            attributes: ["shopperID"],
+          });
+          shopperID = shopperIDData.shopperID;
+        } catch (error) {
+          console.error("Fetch Shopper ID error", error);
+          res.status(500).json({ error: "Internal Server Error" });
+        }
 
         // get shop ID (for shop owners and shop employees)
         // will be null if user is not owner or employee
@@ -94,7 +108,14 @@ module.exports = {
           employeePriviledges = accessRights;
         }
 
-        res.json({ accessToken, roles, userID, shopID, employeePriviledges });
+        res.json({
+          accessToken,
+          roles,
+          userID,
+          shopperID,
+          shopID,
+          employeePriviledges,
+        });
       }
     );
   },

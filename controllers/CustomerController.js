@@ -163,7 +163,24 @@ module.exports = {
 
       res.status(200).json({ message: "Unfollowed Shop" });
     } catch (error) {
-      console.error("Follow Shop Error", error);
+      console.error("Unfollow Shop Error", error);
+      res.status(500).json({
+        error: `Internal Server Error: Cannot Unfollow Shop`,
+      });
+    }
+  },
+
+  checkFollowShop: async (req, res) => {
+    const { shopID, shopperID } = req.query;
+
+    try {
+      isFollowing = await ShopperFollowShop.findOne({
+        where: { shopID: shopID, shopperID: shopperID },
+      });
+      if (isFollowing) res.status(200).json(true);
+      else res.status(200).json(false);
+    } catch (error) {
+      console.error("Check Follow Shop Error", error);
       res.status(500).json({
         error: `Internal Server Error: Cannot Follow Shop`,
       });

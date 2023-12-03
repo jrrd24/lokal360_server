@@ -9,6 +9,7 @@ const Order = require("../models/Order");
 const OrderItem = require("../models/OrderItem");
 const Review = require("../models/Review");
 const Shop = require("../models/Shop");
+const ShopCategory = require("../models/ShopCategory");
 
 module.exports = {
   //HOMEPAGE
@@ -50,11 +51,12 @@ module.exports = {
   },
 
   getAllProducts: async (req, res) => {
-    const { filter } = req.query;
+    const { filter, shopID, filterShopCategory } = req.query;
     const whereClause = filter ? { category_name: filter } : {};
 
     try {
       const allProductsData = await Product.findAll({
+        where: shopID ? { shopID: shopID } : {},
         include: [
           { model: ProductImage, attributes: ["prod_image"] },
           {
@@ -66,6 +68,13 @@ module.exports = {
             model: Category,
             attributes: ["category_name"],
             where: whereClause,
+          },
+          {
+            model: ShopCategory,
+            attributes: [],
+            where: filterShopCategory
+              ? { shopCategoryID: filterShopCategory }
+              : {},
           },
         ],
       });
@@ -247,6 +256,66 @@ module.exports = {
       });
     }
   },
+
+  getShopRating: async (req, res) => {
+    const { shopID } = req.query;
+    const shop = await Shop.findOne({
+      attributes: [
+        "shopID",
+        "shop_name",
+        "type",
+        "address_municipality",
+        "address_barangay",
+        "shipping_deliver_enabled",
+        "shipping_pickup_enabled",
+        "header_img_link",
+        "sells_raw_mats",
+        "is_360_partner",
+      ],
+      where: { shopID: shopID },
+      include: [
+        {
+          model: Product,
+          attributes: ["productID"],
+          include: [
+            {
+              model: ProductVariation,
+              attributes: ["prodVariationID"],
+              include: [{ model: Review, attributes: ["rating"] }],
+            },
+          ],
+        },
+      ],
+    });
+
+    const shopRating = getShopRating(shop);
+
+    res.status(200).json(shopRating);
+    try {
+    } catch (error) {
+      console.error("Get Shop Rating Error", error);
+      res.status(500).json({
+        error: "Internal Server Error: Cannot Get Shop Rating ",
+      });
+    }
+  },
+
+  getAllShopCategories: async (req, res) => {
+    const { shopID } = req.query;
+
+    try {
+      const shopCategories = await ShopCategory.findAll({
+        where: { shopID: shopID },
+        attributes: ["shop_category_name", "shopCategoryID"],
+      });
+      res.status(200).json(shopCategories);
+    } catch (error) {
+      console.error("Get Shop Categories Error", error);
+      res.status(500).json({
+        error: "Internal Server Error: Cannot Get Shop Categories ",
+      });
+    }
+  },
 };
 
 const calculateAverageRating = (ratings) => {
@@ -256,4 +325,40 @@ const calculateAverageRating = (ratings) => {
     ? validRatings.reduce((total, rating) => total + rating, 0) /
         validRatings.length
     : null;
+};
+
+const getShopRating = (shop) => {
+  let shopRatingSum = 0;
+  let totalProducts = 0;
+
+  shop.Products.forEach((product) => {
+    let averageRating = 0;
+
+    if (product.ProductVariations) {
+      const variationsWithReviews = product.ProductVariations.filter(
+        (variation) => variation.Reviews && variation.Reviews.length > 0
+      );
+
+      if (variationsWithReviews.length > 0) {
+        averageRating =
+          variationsWithReviews.reduce((avg, variation) => {
+            const variationReviews = variation.Reviews || [];
+            const variationRatings = variationReviews.map(
+              (review) => review.rating || 0
+            );
+
+            // Calculate the average rating for each variation
+            const variationAverage = calculateAverageRating(variationRatings);
+
+            // Accumulate the average ratings for all variations
+            return avg + variationAverage;
+          }, 0) / variationsWithReviews.length;
+
+        shopRatingSum += averageRating;
+        totalProducts += 1;
+      }
+    }
+  });
+
+  return totalProducts > 0 ? shopRatingSum / totalProducts : 0;
 };

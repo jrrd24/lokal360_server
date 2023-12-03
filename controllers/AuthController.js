@@ -85,6 +85,19 @@ module.exports = {
         //Create Token
         const tokens = createTokens(user);
 
+        //get shopperID
+        let shopperID = null;
+        try {
+          const shopperIDData = await Shopper.findOne({
+            where: { userID: userID },
+            attributes: ["shopperID"],
+          });
+          shopperID = shopperIDData.shopperID;
+        } catch (error) {
+          console.error("Fetch Shopper ID error", error);
+          res.status(500).json({ error: "Internal Server Error" });
+        }
+
         // get shop ID (for shop owners and shop employees)
         // will be null if user is not owner or employee
         let userShopID = null;
@@ -161,9 +174,14 @@ module.exports = {
           maxAge: 30 * 24 * 60 * 60 * 1000,
         }); // Add: secure:true in prod (only works for https)
 
-        res
-          .status(200)
-          .json({ accessToken, roles, userID, shopID, employeePriviledges });
+        res.status(200).json({
+          accessToken,
+          roles,
+          userID,
+          shopperID,
+          shopID,
+          employeePriviledges,
+        });
       }
     } catch (err) {
       res.status(400).json({ error: err });
