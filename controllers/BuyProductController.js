@@ -99,7 +99,8 @@ module.exports = {
   },
 
   getShopperCart: async (req, res) => {
-    const { shopperID } = req.query;
+    const { shopperID, filterCheckout } = req.query;
+    console.log("FC", filterCheckout);
 
     try {
       const cartData = await Cart.findOne({
@@ -108,11 +109,21 @@ module.exports = {
         include: [
           {
             model: CartItem,
-            attributes: ["prodVariationID", "quantity"],
+            attributes: ["cartItemID", "prodVariationID", "quantity"],
+            where: filterCheckout
+              ? {
+                  cartItemID: {
+                    [Op.in]: Array.isArray(filterCheckout)
+                      ? filterCheckout
+                      : Object.values(filterCheckout),
+                  },
+                }
+              : {},
             include: [
               {
                 model: ProductVariation,
                 attributes: ["var_name", "price", "var_image"],
+
                 include: [
                   {
                     model: Product,
@@ -120,7 +131,7 @@ module.exports = {
                     include: [
                       {
                         model: Shop,
-                        attributes: ["shop_name", "is_360_partner"],
+                        attributes: ["shopID", "shop_name", "is_360_partner"],
                       },
                     ],
                   },
@@ -130,6 +141,14 @@ module.exports = {
           },
         ],
       });
+
+      if (!cartData) {
+        // Handle the case where no cart is found for the specified shopperID
+        res
+          .status(404)
+          .json({ error: "Cart not found for the specified shopperID" });
+        return;
+      }
 
       // Group cart items by shop
       const groupedCartByShop = {};
@@ -147,6 +166,8 @@ module.exports = {
         }
 
         groupedCartByShop[shopID].cartItems.push({
+          shopID: cartItem.ProductVariation.Product.Shop.shopID,
+          cartItemID: cartItem.cartItemID,
           prodVariationID: cartItem.prodVariationID,
           quantity: cartItem.quantity,
           var_name: cartItem.ProductVariation.var_name,
@@ -190,23 +211,24 @@ module.exports = {
       orderItems,
     } = req.body;
 
+    console.log("REQ", shopperID, req.body);
     try {
       // CREATE ORDER DETAILS
-      const [order, created] = await Order.findOrCreate({
-        where: {
-          shopperID: shopperID,
-          deliveryAddressID: deliveryAddressID,
-          shopperClaimedVoucherID: shopperClaimedVoucherID,
-          status: "Pending Approval",
-          shipping_method: shippingMethod,
-          approved_at: null,
-          completed_at: null,
-          shipping_fee: shippingFee,
-          deletedAt: null,
-        },
+      const order = await Order.create({
+        shopperID: shopperID,
+        deliveryAddressID: deliveryAddressID,
+        shopperClaimedVoucherID: shopperClaimedVoucherID,
+        status: "Pending Approval",
+        shipping_method: shippingMethod,
+        approved_at: null,
+        completed_at: null,
+        shipping_fee: shippingFee,
+        deletedAt: null,
       });
 
-      if (created) {
+
+
+      if (order) {
         const cartItems = await CartItem.findAll({
           where: { cartItemID: { [Op.in]: orderItems } },
         });
@@ -223,6 +245,10 @@ module.exports = {
           });
 
           orderItemsCreated.push(orderItem);
+
+          await CartItem.destroy({
+            where: { cartItemID: cartItem.cartItemID },
+          });
         }
 
         res.status(200).json({ order, orderItemsCreated });
@@ -466,14 +492,15 @@ module.exports = {
           ),
         },
         AppliedVoucher: {
-          voucherID: orderDetails.ShopperClaimedVoucher.voucherID,
-          startDate: orderDetails.ShopperClaimedVoucher.Voucher.start_date,
-          endDate: orderDetails.ShopperClaimedVoucher.Voucher.end_date,
-          min_spend: orderDetails.ShopperClaimedVoucher.Voucher.Promo.min_spend,
+          voucherID: orderDetails.ShopperClaimedVoucher?.voucherID,
+          startDate: orderDetails.ShopperClaimedVoucher?.Voucher.start_date,
+          endDate: orderDetails.ShopperClaimedVoucher?.Voucher.end_date,
+          min_spend:
+            orderDetails.ShopperClaimedVoucher?.Voucher.Promo.min_spend,
           discount_amount:
-            orderDetails.ShopperClaimedVoucher.Voucher.Promo.discount_amount,
+            orderDetails.ShopperClaimedVoucher?.Voucher.Promo.discount_amount,
           promo_type_name:
-            orderDetails.ShopperClaimedVoucher.Voucher.Promo.PromoType
+            orderDetails.ShopperClaimedVoucher?.Voucher.Promo.PromoType
               .promo_type_name,
         },
 

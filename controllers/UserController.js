@@ -67,7 +67,9 @@ module.exports = {
       }
     } catch (error) {
       console.error("Create Delivery Address", error);
-      res.status(500).json({ error: `Internal server error: ${error}` });
+      res.status(500).json({
+        error: `Internal server error: Delivery Address Creation Failed`,
+      });
     }
   },
 
@@ -107,17 +109,20 @@ module.exports = {
         where: { is_active: true, shopperID: shopperID },
       });
 
-      if (activeDA.deliveryAddressID !== deliveryAddressID) {
-        await DeliverAddress.update(
-          { is_active: false },
-          { where: { deliveryAddressID: activeDA.deliveryAddressID } }
-        );
-
-        await DeliverAddress.update(
-          { is_active: true },
-          { where: { deliveryAddressID: deliveryAddressID } }
-        );
+      if (activeDA) {
+        // Check if activeDA is not null before accessing its properties
+        if (activeDA.deliveryAddressID !== deliveryAddressID) {
+          await DeliverAddress.update(
+            { is_active: false },
+            { where: { deliveryAddressID: activeDA.deliveryAddressID } }
+          );
+        }
       }
+      await DeliverAddress.update(
+        { is_active: true },
+        { where: { deliveryAddressID: deliveryAddressID } }
+      );
+
       res.sendStatus(200);
     } catch (error) {
       console.log("Set Active Delivery Address Error: ", error);
@@ -143,5 +148,4 @@ module.exports = {
       res.status(500).json({ error: `Internal Server Error: ${error}` });
     }
   },
-
 };

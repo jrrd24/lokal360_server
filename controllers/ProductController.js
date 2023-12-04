@@ -932,13 +932,17 @@ module.exports = {
 
     try {
       const result = await Product.findAndCountAll({
-        where: { shopID: shopID, product_name: { [Op.like]: `%${query}%` } },
+        where: {
+          ...(shopID ? { shopID: shopID } : {}),
+          product_name: { [Op.like]: `%${query}%` },
+        },
         include: [
           { model: ProductImage, attributes: ["prod_image"] },
           {
             model: ProductVariation,
             attributes: ["prodVariationID"],
             include: [{ model: Review, attributes: ["rating"] }],
+            required: shopID ? false : true,
           },
         ],
       });
