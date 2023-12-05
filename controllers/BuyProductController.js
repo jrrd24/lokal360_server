@@ -226,8 +226,6 @@ module.exports = {
         deletedAt: null,
       });
 
-
-
       if (order) {
         const cartItems = await CartItem.findAll({
           where: { cartItemID: { [Op.in]: orderItems } },
@@ -264,7 +262,7 @@ module.exports = {
   },
 
   getAllShopOrders: async (req, res) => {
-    const { shopID } = req.query;
+    const { shopID, shopperID, filterOrder } = req.query;
 
     try {
       const shopOrders = await Order.findAll({
@@ -275,6 +273,7 @@ module.exports = {
           "shipping_method",
           "createdAt",
         ],
+        where: filterOrder ? { status: filterOrder } : {},
         include: [
           {
             model: OrderItem,
@@ -282,12 +281,13 @@ module.exports = {
             include: [
               {
                 model: ProductVariation,
-                attributes: ["var_name", "price"],
+                attributes: ["var_name", "price", "var_image"],
                 include: [
                   {
                     model: Product,
                     attributes: ["product_name", "shopID"],
-                    where: { shopID: shopID },
+                    where: shopID ? { shopID: shopID } : {},
+                    include: [{ model: Shop, attributes: ["shop_name"] }],
                     required: true,
                   },
                 ],
@@ -300,6 +300,7 @@ module.exports = {
             model: Shopper,
             attributes: ["username"],
             include: [{ model: User, attributes: ["first_name", "last_name"] }],
+            where: shopperID ? { shopperID: shopperID } : {},
           },
         ],
         order: [
@@ -347,8 +348,10 @@ module.exports = {
             quantity: orderItem.quantity,
             prodVariationID: orderItem.prodVariationID,
             var_name: orderItem.ProductVariation.var_name,
+            var_image: orderItem.ProductVariation.var_image,
             product_name: orderItem.ProductVariation.Product.product_name,
             shopID: orderItem.ProductVariation.Product.shopID,
+            shop_name: orderItem.ProductVariation.Product.Shop.shop_name,
           })),
           Shopper: {
             username: order.Shopper.username,

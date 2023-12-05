@@ -245,12 +245,23 @@ module.exports = {
           const orderItemsWithShipping =
             orderTotalPrice + parseFloat(order.shipping_fee);
 
-          const discountAmount = parseFloat(
-            order.ShopperClaimedVoucher.Voucher.Promo.discount_amount
-          );
-          const discountType =
-            order.ShopperClaimedVoucher.Voucher.Promo.PromoType.promo_type_name;
+          const discountAmount =
+            order.ShopperClaimedVoucher &&
+            order.ShopperClaimedVoucher.Voucher &&
+            order.ShopperClaimedVoucher.Voucher.Promo
+              ? parseFloat(
+                  order.ShopperClaimedVoucher.Voucher.Promo.discount_amount
+                )
+              : 0;
 
+          const discountType =
+            order.ShopperClaimedVoucher &&
+            order.ShopperClaimedVoucher.Voucher &&
+            order.ShopperClaimedVoucher.Voucher.Promo &&
+            order.ShopperClaimedVoucher.Voucher.Promo.PromoType
+              ? order.ShopperClaimedVoucher.Voucher.Promo.PromoType
+                  .promo_type_name
+              : "";
           const totalWithDiscount =
             discountType === "Percent Discount"
               ? orderItemsWithShipping - orderItemsWithShipping * discountAmount
