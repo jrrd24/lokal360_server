@@ -100,7 +100,9 @@ module.exports = {
 
   getShopperCart: async (req, res) => {
     const { shopperID, filterCheckout } = req.query;
-    console.log("FC", filterCheckout);
+    const filterCheckoutArray = filterCheckout
+      ? filterCheckout.split(",").map(Number)
+      : [];
 
     try {
       const cartData = await Cart.findOne({
@@ -113,9 +115,7 @@ module.exports = {
             where: filterCheckout
               ? {
                   cartItemID: {
-                    [Op.in]: Array.isArray(filterCheckout)
-                      ? filterCheckout
-                      : Object.values(filterCheckout),
+                    [Op.in]: filterCheckoutArray,
                   },
                 }
               : {},
@@ -241,6 +241,26 @@ module.exports = {
               quantity: cartItem.quantity,
             },
           });
+
+          const varAmtOnHand = await ProductVariation.findOne({
+            where: {
+              prodVariationID: cartItem.prodVariationID,
+            },
+            attributes: ["amt_on_hand"],
+          });
+
+          if (varAmtOnHand) {
+            let newAmtOnHand =
+              varAmtOnHand.dataValues.amt_on_hand - cartItem.quantity;
+
+            // Ensure that newAmtOnHand is not negative
+            newAmtOnHand = Math.max(newAmtOnHand, 0);
+
+            await ProductVariation.update(
+              { amt_on_hand: newAmtOnHand },
+              { where: { prodVariationID: cartItem.prodVariationID } }
+            );
+          }
 
           orderItemsCreated.push(orderItem);
 
