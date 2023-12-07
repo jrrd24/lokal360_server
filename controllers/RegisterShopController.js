@@ -3,7 +3,7 @@ const ShopRegistration = require("../models/ShopRegistration");
 const User = require("../models/User");
 const path = require("path");
 const destinationFolder = "uploads/shop/documents";
-const destinationFolderDB = "shop/product";
+const destinationFolderDB = "shop/documents";
 const fs = require("fs");
 const Shop = require("../models/Shop");
 const ShopOwner = require("../models/ShopOwner");
@@ -193,7 +193,13 @@ module.exports = {
         },
         include: {
           model: User,
-          attributes: ["first_name", "last_name", "profile_pic"],
+          attributes: [
+            "first_name",
+            "last_name",
+            "profile_pic",
+            "email",
+            "mobile_num",
+          ],
         },
       });
 
