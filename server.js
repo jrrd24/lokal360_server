@@ -27,6 +27,7 @@ const customerRoute = require("./routes/Customer");
 const registerShopRoute = require("./routes/RegisterShop");
 const productReviewRoute = require("./routes/ProductReview");
 const shopperSideGetRoute = require("./routes/ShopperSideGet");
+const adminSideGetRoute = require("./routes/AdminSideGet");
 //initalize functions
 const app = express();
 const port = 8800;
@@ -98,6 +99,7 @@ app.use("/api/customer", customerRoute);
 app.use("/api/register_shop", registerShopRoute);
 app.use("/api/review", productReviewRoute);
 app.use("/api/shopper_get", shopperSideGetRoute);
+app.use("/api/admin_get", adminSideGetRoute)
 app.use(verifyJWT.validateToken);
 app.use("/api/home", homeRoute);
 app.use("/api/profile", profileRoute);

@@ -39,6 +39,27 @@ module.exports = {
         });
 
         if (created) {
+          const varAmtOnHand = await ProductVariation.findOne({
+            where: {
+              prodVariationID: prodVariationID,
+            },
+            attributes: ["amt_on_hand"],
+          });
+
+          let newAmtOnHand;
+          if (varAmtOnHand) {
+            newAmtOnHand = varAmtOnHand.amt_on_hand - quantity;
+
+            await ProductVariation.update(
+              { amt_on_hand: newAmtOnHand },
+              { where: { prodVariationID: prodVariationID } }
+            );
+          } else {
+            res.status(404).json({
+              error: "Internal Server Error: Product Variation Not Found",
+            });
+          }
+
           res.status(200).json(cartItem);
         } else {
           res.status(409).json({ error: "Cart Item Already Exists" });
@@ -199,6 +220,37 @@ module.exports = {
   // get delivery options, get payment method options,
   // get applied vouchers options, get order summary,
   // get subtotal and saved prices
+  handleAddToCart: async (req, res) => {
+    const { prodVariationID, quantity } = req.query;
+
+    try {
+      const varAmtOnHand = await ProductVariation.findOne({
+        where: {
+          prodVariationID: prodVariationID,
+        },
+        attributes: ["amt_on_hand"],
+      });
+
+      let newAmtOnHand;
+      if (varAmtOnHand) {
+        newAmtOnHand = varAmtOnHand.amt_on_hand - quantity;
+
+        await ProductVariation.update(
+          { amt_on_hand: newAmtOnHand },
+          { where: { prodVariationID: prodVariationID } }
+        );
+      } else {
+        res.status(404).json({
+          error: "Internal Server Error: Product Variation Not Found",
+        });
+      }
+
+      res.status(200).json({ varAmtOnHand, newAmtOnHand });
+    } catch (error) {
+      console.log("error", error);
+      res.status(500).json(error);
+    }
+  },
 
   //CREATE ORDER
   createOrder: async (req, res) => {
@@ -241,26 +293,6 @@ module.exports = {
               quantity: cartItem.quantity,
             },
           });
-
-          const varAmtOnHand = await ProductVariation.findOne({
-            where: {
-              prodVariationID: cartItem.prodVariationID,
-            },
-            attributes: ["amt_on_hand"],
-          });
-
-          if (varAmtOnHand) {
-            let newAmtOnHand =
-              varAmtOnHand.dataValues.amt_on_hand - cartItem.quantity;
-
-            // Ensure that newAmtOnHand is not negative
-            newAmtOnHand = Math.max(newAmtOnHand, 0);
-
-            await ProductVariation.update(
-              { amt_on_hand: newAmtOnHand },
-              { where: { prodVariationID: cartItem.prodVariationID } }
-            );
-          }
 
           orderItemsCreated.push(orderItem);
 

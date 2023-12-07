@@ -14,7 +14,6 @@ router.post(
 router.get(
   "/reviews/product",
   verifyJWT.validateToken,
-  verifyRoles("shop owner", "shop employee"),
   controller.getProductReview
 );
 module.exports = router;

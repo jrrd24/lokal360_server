@@ -44,4 +44,6 @@ router.get(
   controller.getShopOrderCount
 );
 
+router.patch("/test_inventory_update", controller.handleAddToCart);
+
 module.exports = router;

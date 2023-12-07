@@ -153,7 +153,7 @@ module.exports = {
   displayAllShopRegistration: async (req, res) => {
     try {
       const allShopRegistration = await ShopRegistration.findAll({
-        attributes: ["shopRegistrationID", "status"],
+        attributes: ["shopRegistrationID", "status", "shop_name"],
         include: {
           model: User,
           attributes: ["first_name", "last_name", "profile_pic"],
@@ -163,12 +163,18 @@ module.exports = {
       const flattenedData = allShopRegistration.map((registration) => ({
         shopRegistrationID: registration.shopRegistrationID,
         status: registration.status,
-        first_name: registration.User.first_name,
-        last_name: registration.User.last_name,
+        shop_name: registration.shop_name,
+        owner_name: `${registration.User.first_name} ${registration.User.last_name}`,
         profile_pic: registration.User.profile_pic,
       }));
 
-      res.status(200).json(flattenedData);
+      const statusOrder = ["Pending Approval", "Approved", "Rejected"];
+
+      const sortedData = flattenedData.sort(
+        (a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status)
+      );
+
+      res.status(200).json(sortedData);
     } catch (error) {
       console.error("Display All Shop Registrations Error:", error);
       res.status(500).json({

@@ -15,7 +15,7 @@ module.exports = {
 
     try {
       const allShopAdData = await LokalAds.findAll({
-        where: { shopID: shopID },
+        where:{ shopID: shopID },
         attributes: [
           "lokalAdsID",
           "shopID",
@@ -49,6 +49,10 @@ module.exports = {
               ? "Active"
               : ad.type === 2 && ad.status === "Approved" && isActive
               ? "Active"
+              : ad.type === 2 &&
+                ad.status === "Pending Approval" &&
+                startDate < currentDate
+              ? "Expired"
               : isExpired
               ? "Expired"
               : ad.status,
@@ -180,7 +184,7 @@ module.exports = {
 
     try {
       const allAds = await LokalAds.findAll({
-        where: { shopID: shopID },
+        where: shopID ? { shopID: shopID } : { type: 2 },
         attributes: ["lokalAdsID", "type", "status", "start_date", "end_date"],
       });
 
@@ -207,9 +211,10 @@ module.exports = {
           } else if (ad.type === 2 && ad.status === "Approved" && isActive) {
             activeCount++;
           } else if (
-            ad.type === 2 &&
-            ad.status === "Pending Approval" &&
-            isExpired
+            (ad.type === 2 && ad.status === "Pending Approval" && isExpired) ||
+            (ad.type === 2 &&
+              ad.status === "Pending Approval" &&
+              startDate < currentDate)
           ) {
             expiredCount++;
           } else if (ad.type === 2 && ad.status === "Pending Approval") {

@@ -153,6 +153,7 @@ module.exports = {
               },
             ],
           },
+          { model: Shop, attributes: ["shop_name", "logo_img_link", "shopID"] },
         ],
       });
 
@@ -496,7 +497,7 @@ module.exports = {
 
   //For Featured
   getAllFeatured: async (req, res) => {
-    const { shopID } = req.query;
+    const { shopID, shopperView } = req.query;
     try {
       const allFeaturedData = await Product.findAll({
         where: { shopID: shopID, is_featured: true },
@@ -509,6 +510,7 @@ module.exports = {
             model: ProductVariation,
             attributes: ["prodVariationID"],
             include: [{ model: Review, attributes: ["rating"] }],
+            required: shopperView,
           },
         ],
       });
