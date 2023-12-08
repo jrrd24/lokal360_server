@@ -317,6 +317,7 @@ module.exports = {
           productDescription,
           productName,
           shopCategory,
+          isRawMat,
         } = req.body;
 
         let productThumbnailPath = null;
@@ -341,6 +342,7 @@ module.exports = {
               shopCategoryID: shopCategory,
               product_name: productName,
               description: productDescription,
+              is_raw_mat: isRawMat,
             },
           });
 
@@ -401,8 +403,13 @@ module.exports = {
           return res.status(500).json({ error: "File upload error" });
         }
 
-        const { category, productDescription, productName, shopCategory } =
-          req.body;
+        const {
+          category,
+          productDescription,
+          productName,
+          shopCategory,
+          isRawMaterial,
+        } = req.body;
 
         // thumbnail path for db
         let thumbnailPath = null;
@@ -431,6 +438,7 @@ module.exports = {
               description: productDescription,
               product_name: productName,
               shopCategoryID: shopCategory,
+              is_raw_mat: isRawMaterial,
             },
             { where: { productID: productID } }
           );

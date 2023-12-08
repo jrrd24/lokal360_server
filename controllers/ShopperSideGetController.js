@@ -50,122 +50,27 @@ module.exports = {
     }
   },
 
-  //HOMEPAGE and CATEGORIES
-  getAllProductsHomepage: async (req, res) => {
-    const { filter, shopID, filterShopCategory } = req.query;
-    const whereClause = filter ? { category_name: filter } : {};
-
-    try {
-      const allProductsData = await Product.findAll({
-        where: shopID ? { shopID: shopID } : {},
-        include: [
-          { model: ProductImage, attributes: ["prod_image"] },
-          {
-            model: ProductVariation,
-            attributes: ["prodVariationID"],
-            include: [{ model: Review, attributes: ["rating"] }],
-            required: true,
-          },
-          {
-            model: Category,
-            attributes: ["category_name"],
-            where: whereClause,
-          },
-          {
-            model: ShopCategory,
-            attributes: [],
-            where: filterShopCategory
-              ? { shopCategoryID: filterShopCategory }
-              : {},
-          },
-        ],
-      });
-
-      const allProducts = await Promise.all(
-        allProductsData.map(async (product) => {
-          // GET PRICE
-          const minVarPrice = await ProductVariation.min("price", {
-            where: { productID: product.productID },
-          });
-
-          //AMOUNT SOLD
-          const prodOrdersCount = await Order.count({
-            attributes: ["orderID"],
-            where: { status: "Complete" },
-            include: [
-              {
-                model: OrderItem,
-                attributes: ["orderItemID"],
-                include: [
-                  {
-                    model: ProductVariation,
-                    attributes: ["productID"],
-                    where: { productID: product.productID },
-                    required: true,
-                  },
-                ],
-                required: true,
-              },
-            ],
-            group: ["Order.orderID"],
-          });
-
-          const totalCount = prodOrdersCount.reduce(
-            (total, order) => total + order.count,
-            0
-          );
-
-          //AVERAGE RATING
-          let averageRating = 0;
-
-          if (product.ProductVariations) {
-            const variationsWithReviews = product.ProductVariations.filter(
-              (variation) => variation.Reviews && variation.Reviews.length > 0
-            );
-
-            if (variationsWithReviews.length > 0) {
-              averageRating =
-                variationsWithReviews.reduce((avg, variation) => {
-                  const variationReviews = variation.Reviews || [];
-                  const variationRatings = variationReviews.map(
-                    (review) => review.rating || 0
-                  );
-
-                  // Calculate the average rating for each variation
-                  const variationAverage =
-                    calculateAverageRating(variationRatings);
-
-                  // Accumulate the average ratings for all variations
-                  return avg + variationAverage;
-                }, 0) / variationsWithReviews.length;
-            }
-          }
-          return {
-            ...product.toJSON(),
-            price: minVarPrice,
-            orig_price: minVarPrice,
-            total_sold: totalCount || 0,
-            rating: averageRating,
-          };
-        })
-      );
-
-      res.status(200).json(allProducts);
-    } catch (error) {
-      console.error("Get All Products Error", error);
-      res.status(500).json({
-        error: "Internal Server Error: Cannot Get All Products ",
-      });
-    }
-  },
-
   getAllProducts: async (req, res) => {
-    const { filter, shopID, filterShopCategory } = req.query;
-    const whereClause = filter ? { category_name: filter } : {};
+    const {
+      filter,
+      shopID,
+      filterShopCategory,
+      filterRawMats,
+      filterCategoryID,
+    } = req.query;
+    const whereClause = filter
+      ? { category_name: filter }
+      : filterCategoryID
+      ? { categoryID: filterCategoryID }
+      : {};
 
     try {
       const allProductsData = await Product.findAll({
-        where: shopID ? { shopID: shopID } : {},
+        where: shopID
+          ? { shopID: shopID }
+          : filterRawMats
+          ? { is_raw_mat: true }
+          : {},
         include: [
           { model: ProductImage, attributes: ["prod_image"] },
           {

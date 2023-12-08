@@ -37,6 +37,10 @@ const Product = sequelize.define(
     description: {
       type: DataTypes.STRING(500),
     },
+    is_raw_mat: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
 
     // total_sold: {
     //   type: DataTypes.INTEGER,
