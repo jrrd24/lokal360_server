@@ -180,11 +180,24 @@ module.exports = {
   deleteShopEmployee: async (req, res) => {
     const { shopEmployeeID } = req.query;
     try {
+      const shopEmployee = await ShopEmployee.findOne({
+        where: {
+          shopEmployeeID: shopEmployeeID,
+        },
+        attributes: ["userID"],
+      });
+
       await ShopEmployee.destroy({
         where: {
           shopEmployeeID: shopEmployeeID,
         },
       });
+
+      await User.update(
+        { is_shop_employee: false },
+        { where: { userID: shopEmployee.userID } }
+      );
+
       res.sendStatus(200);
     } catch (error) {
       console.error("Delete Shop Employee Error: ", error);
@@ -200,6 +213,12 @@ module.exports = {
           shopEmployeeID: shopEmployeeID,
         },
       });
+
+      await User.update(
+        { is_shop_employee: true },
+        { where: { shopEmployeeID: shopEmployeeID } }
+      );
+
       res.sendStatus(200);
     } catch (error) {
       console.error("Restore Shop Employee Error: ", error);

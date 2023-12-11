@@ -9,7 +9,7 @@ const OrderItem = require("../models/OrderItem");
 
 module.exports = {
   getAllShopCategory: async (req, res) => {
-    const { shopID, limit } = req.query;
+    const { shopID, limit, orderDESC } = req.query;
 
     try {
       const allShopCategory = await ShopCategory.findAll({
@@ -36,8 +36,7 @@ module.exports = {
           "createdAt",
         ],
         group: ["ShopCategory.shopCategoryID", "Products.productID"],
-        order: [["createdAt", "DESC"]],
-        limit: parseInt(limit) || null,
+        order: orderDESC ? [["createdAt", "DESC"]] : [],
         subQuery: false,
       });
 
@@ -82,8 +81,20 @@ module.exports = {
         })
       );
 
-      if (allShopCategory.length > 0) {
-        res.status(200).json(allShopCategoryData);
+      // Calculate the total products count without the limit
+      const totalProductsCount = allShopCategoryData.reduce(
+        (total, category) => total + category.total_sold,
+        0
+      );
+
+      // Apply the limit after processing the results
+      const shopCategories = allShopCategoryData.slice(
+        0,
+        parseInt(limit) || undefined
+      );
+
+      if (shopCategories.length > 0) {
+        res.status(200).json({ shopCategories, totalProductsCount });
       } else {
         res.status(404).json({ error: "No Shop Categories Found" });
       }

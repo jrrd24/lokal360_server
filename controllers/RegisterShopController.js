@@ -153,11 +153,12 @@ module.exports = {
   displayAllShopRegistration: async (req, res) => {
     try {
       const allShopRegistration = await ShopRegistration.findAll({
-        attributes: ["shopRegistrationID", "status", "shop_name"],
+        attributes: ["shopRegistrationID", "status", "shop_name", "createdAt"],
         include: {
           model: User,
           attributes: ["first_name", "last_name", "profile_pic"],
         },
+        order: [["createdAt", "DESC"]],
       });
 
       const flattenedData = allShopRegistration.map((registration) => ({

@@ -7,6 +7,9 @@ const Product = require("../models/Product");
 const Shop = require("../models/Shop");
 const moment = require("moment/moment");
 const ShopOwner = require("../models/ShopOwner");
+const BanReport = require("../models/BanReport");
+const ShopRegistration = require("../models/ShopRegistration");
+const { Op } = require("sequelize");
 
 module.exports = {
   getAllUsers: async (req, res) => {
@@ -174,6 +177,7 @@ module.exports = {
           attributes: ["shopOwnerID"],
           include: { model: User, attributes: ["first_name", "last_name"] },
         },
+        order: [["createdAt", "DESC"]],
       });
 
       const flattenedData = allShops.map((shop) => ({
@@ -190,6 +194,65 @@ module.exports = {
     } catch (error) {
       console.error("Get All Shops: ", error);
       res.status(500).send("Internal Server Error: Cannot Retreive Shops");
+    }
+  },
+
+  dashboardContent: async (req, res) => {
+    try {
+      const userCount = await User.count();
+      const shopperCount = await User.count({ where: { is_shopper: true } });
+      const shopOwnerCount = await User.count({
+        where: { is_shop_owner: true },
+      });
+      const employeeCount = await User.count({
+        where: { is_shop_employee: true },
+      });
+
+      const userData = {
+        userCount: {
+          label: "Users",
+          total_count: userCount,
+        },
+        shopperCount: {
+          label: "Shoppers",
+          total_count: shopperCount,
+        },
+        shopOwnerCount: {
+          label: "Shop Owners",
+          total_count: shopOwnerCount,
+        },
+        employeeCount: {
+          label: "Employees",
+          total_count: employeeCount,
+        },
+      };
+
+      const banReportCount = await BanReport.count();
+      const shopApprovalCount = await ShopRegistration.count({
+        where: { status: "Pending Approval" },
+      });
+      const sitewideAdCount = await LokalAds.count({
+        where: {
+          type: 2,
+          status: "Pending Approval",
+          start_date: {
+            [Op.gte]: new Date(),
+          },
+        },
+      });
+
+      const atAGlance = {
+        banReportCount,
+        shopApprovalCount,
+        sitewideAdCount,
+      };
+
+      res.status(200).json({ userData, atAGlance });
+    } catch (error) {
+      console.error("Dashboard Content: ", error);
+      res
+        .status(500)
+        .send("Internal Server Error: Cannot Retreive Dashboard Content");
     }
   },
 };

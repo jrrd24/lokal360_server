@@ -8,4 +8,6 @@ router.get("/all_users", controller.getAllUsers);
 router.get("/all_categories", controller.getAllCategories);
 router.get("/all_sitewide_ads", controller.getAllSitewideAds);
 router.get("/all_shops", controller.getAllShops);
+router.get("/dashboard", controller.dashboardContent);
+
 module.exports = router;
