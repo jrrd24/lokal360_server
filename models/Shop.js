@@ -59,10 +59,10 @@ const Shop = sequelize.define(
       type: DataTypes.STRING(100),
     },
     latitude: {
-      type: DataTypes.DECIMAL(10, 6),
+      type: DataTypes.DECIMAL(11, 8),
     },
     longitude: {
-      type: DataTypes.DECIMAL(10, 6),
+      type: DataTypes.DECIMAL(11, 8),
     },
     phone_number: {
       type: DataTypes.STRING(20),

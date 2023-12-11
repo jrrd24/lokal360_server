@@ -122,7 +122,7 @@ module.exports = {
             ? order.ShopperClaimedVoucher.Voucher.Promo.PromoType
                 .promo_type_name
             : "";
-            
+
         const totalWithDiscount =
           discountType === "Percent Discount"
             ? orderItemsWithShipping - orderItemsWithShipping * discountAmount
@@ -294,5 +294,27 @@ module.exports = {
         }
       }
     );
+  },
+
+  setCoordinates: async (req, res) => {
+    const { shopID } = req.query;
+
+    console.log("SID", shopID);
+    console.log("REQ", req.body);
+    console.log("LAT", req.body.latitude);
+    console.log("LON", req.body.longitude);
+    try {
+      await Shop.update(
+        { latitude: req.body.latitude, longitude: req.body.longitude },
+        { where: { shopID: shopID } }
+      );
+
+      res.sendStatus(200);
+    } catch (error) {
+      console.error("Update Shop Coordinates Error", error);
+      res.status(500).json({
+        error: "Internal server error: Cannot Update Shop Coordinates",
+      });
+    }
   },
 };
