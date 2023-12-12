@@ -103,31 +103,22 @@ module.exports = {
           });
 
           //AMOUNT SOLD
-          const prodOrdersCount = await Order.count({
-            attributes: ["orderID"],
-            where: { status: "Complete" },
+          const totalCount = await OrderItem.sum("quantity", {
+            where: {
+              "$Order.status$": "Complete",
+              "$ProductVariation.productID$": product.productID,
+            },
             include: [
               {
-                model: OrderItem,
-                attributes: ["orderItemID"],
-                include: [
-                  {
-                    model: ProductVariation,
-                    attributes: ["productID"],
-                    where: { productID: product.productID },
-                    required: true,
-                  },
-                ],
-                required: true,
+                model: Order,
+                attributes: [],
+              },
+              {
+                model: ProductVariation,
+                attributes: [],
               },
             ],
-            group: ["Order.orderID"],
           });
-
-          const totalCount = prodOrdersCount.reduce(
-            (total, order) => total + order.count,
-            0
-          );
 
           //AVERAGE RATING
           let averageRating = 0;

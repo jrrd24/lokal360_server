@@ -62,31 +62,22 @@ module.exports = {
           }
 
           //AMOUNT SOLD
-          const prodOrdersCount = await Order.count({
-            attributes: ["orderID"],
-            where: { status: "Complete" },
+          const totalCount = await OrderItem.sum("quantity", {
+            where: {
+              "$Order.status$": "Complete",
+              "$ProductVariation.productID$": product.productID,
+            },
             include: [
               {
-                model: OrderItem,
-                attributes: ["orderItemID"],
-                include: [
-                  {
-                    model: ProductVariation,
-                    attributes: ["productID"],
-                    where: { productID: product.productID },
-                    required: true,
-                  },
-                ],
-                required: true,
+                model: Order,
+                attributes: [],
+              },
+              {
+                model: ProductVariation,
+                attributes: [],
               },
             ],
-            group: ["Order.orderID"],
           });
-
-          const totalCount = prodOrdersCount.reduce(
-            (total, order) => total + order.count,
-            0
-          );
           // Add status property to the product object
           return {
             ...product.toJSON(),
@@ -192,6 +183,23 @@ module.exports = {
           where: { productID: productID },
         });
 
+        const totalCount = await OrderItem.sum("quantity", {
+          where: {
+            "$Order.status$": "Complete",
+            "$ProductVariation.productID$": product.productID,
+          },
+          include: [
+            {
+              model: Order,
+              attributes: [],
+            },
+            {
+              model: ProductVariation,
+              attributes: [],
+            },
+          ],
+        });
+
         const prodOrdersCount = await Order.findAndCountAll({
           attributes: ["shipping_fee"],
           where: { status: "Complete" },
@@ -285,7 +293,7 @@ module.exports = {
         product.dataValues.prod_status = prodStatus;
         product.dataValues.number_of_variations = variationCount;
         product.dataValues.total_sales = totalSales;
-        product.dataValues.amountSold = prodOrdersCount.count;
+        product.dataValues.amountSold = totalCount;
 
         res.status(200).json(product);
       } else {
@@ -544,31 +552,22 @@ module.exports = {
           });
 
           //AMOUNT SOLD
-          const prodOrdersCount = await Order.count({
-            attributes: ["orderID"],
-            where: { status: "Complete" },
+          const totalCount = await OrderItem.sum("quantity", {
+            where: {
+              "$Order.status$": "Complete",
+              "$ProductVariation.productID$": product.productID,
+            },
             include: [
               {
-                model: OrderItem,
-                attributes: ["orderItemID"],
-                include: [
-                  {
-                    model: ProductVariation,
-                    attributes: ["productID"],
-                    where: { productID: product.productID },
-                    required: true,
-                  },
-                ],
-                required: true,
+                model: Order,
+                attributes: [],
+              },
+              {
+                model: ProductVariation,
+                attributes: [],
               },
             ],
-            group: ["Order.orderID"],
           });
-
-          const totalCount = prodOrdersCount.reduce(
-            (total, order) => total + order.count,
-            0
-          );
 
           //AVERAGE RATING
           let averageRating = 0;
@@ -654,31 +653,22 @@ module.exports = {
       const topProducts = await Promise.all(
         topProductsData.map(async (product) => {
           //AMOUNT SOLD
-          const prodOrdersCount = await Order.count({
-            attributes: ["orderID"],
-            where: { status: "Complete" },
+          const totalCount = await OrderItem.sum("quantity", {
+            where: {
+              "$Order.status$": "Complete",
+              "$ProductVariation.productID$": product.productID,
+            },
             include: [
               {
-                model: OrderItem,
-                attributes: ["orderItemID"],
-                include: [
-                  {
-                    model: ProductVariation,
-                    attributes: ["productID"],
-                    where: { productID: product.productID },
-                    required: true,
-                  },
-                ],
-                required: true,
+                model: Order,
+                attributes: [],
+              },
+              {
+                model: ProductVariation,
+                attributes: [],
               },
             ],
-            group: ["Order.orderID"],
           });
-
-          const totalCount = prodOrdersCount.reduce(
-            (total, order) => total + order.count,
-            0
-          );
 
           // Add status property to the product object
           return {
