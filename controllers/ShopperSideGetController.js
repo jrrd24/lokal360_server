@@ -1,5 +1,5 @@
 const today = new Date();
-const { Op } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const LokalAds = require("../models/LokalAds");
 const Category = require("../models/Category");
 const Product = require("../models/Product");
@@ -57,7 +57,11 @@ module.exports = {
       filterShopCategory,
       filterRawMats,
       filterCategoryID,
+      filterBestSellers,
+      filterNewArrival,
+      limit,
     } = req.query;
+
     const whereClause = filter
       ? { category_name: filter }
       : filterCategoryID
@@ -93,6 +97,12 @@ module.exports = {
             required: filterShopCategory ? true : false,
           },
         ],
+        order: filterBestSellers
+          ? undefined
+          : filterNewArrival
+          ? [["createdAt", "DESC"], [Sequelize.literal("rand()")]]
+          : Sequelize.literal("rand()"),
+        limit: filterNewArrival && limit ? parseInt(limit) : undefined,
       });
 
       const allProducts = await Promise.all(
@@ -155,7 +165,19 @@ module.exports = {
         })
       );
 
-      res.status(200).json(allProducts);
+      // Order the array by total_sold in descending order
+      let limitedSortedProducts;
+      if (filterBestSellers) {
+        const sortedProducts = allProducts
+          .filter((product) => product.total_sold > 0)
+          .sort((a, b) => b.total_sold - a.total_sold);
+        // Limit to only the first 10 elements
+        limitedSortedProducts = sortedProducts.slice(0, parseInt(limit));
+      }
+
+      res
+        .status(200)
+        .json(filterBestSellers ? limitedSortedProducts : allProducts);
     } catch (error) {
       console.error("Get All Products Error", error);
       res.status(500).json({
@@ -165,7 +187,7 @@ module.exports = {
   },
 
   getAllShops: async (req, res) => {
-    const { filter, isRawMat } = req.query;
+    const { filter, isRawMat, isPartner } = req.query;
     const whereClause = filter ? { category_name: filter } : {};
 
     try {
@@ -179,10 +201,15 @@ module.exports = {
           "shipping_deliver_enabled",
           "shipping_pickup_enabled",
           "header_img_link",
+          "logo_img_link",
           "sells_raw_mats",
           "is_360_partner",
         ],
-        where: isRawMat ? { sells_raw_mats: true } : {},
+        where: isRawMat
+          ? { sells_raw_mats: true }
+          : isPartner
+          ? { is_360_partner: true }
+          : {},
         include: [
           {
             model: Category,
@@ -200,6 +227,7 @@ module.exports = {
             ],
           },
         ],
+        order: Sequelize.literal("rand()"),
       });
 
       // INCLUDES SHOP RATING
@@ -247,6 +275,7 @@ module.exports = {
           shipping_deliver_enabled: shop.shipping_deliver_enabled,
           shipping_pickup_enabled: shop.shipping_pickup_enabled,
           header_img_link: shop.header_img_link,
+          logo_img_link: shop.logo_img_link,
           sells_raw_mats: shop.sells_raw_mats,
           is_360_partner: shop.is_360_partner,
           shop_rating: shopAverageRating,
